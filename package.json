@@ -1,0 +1,38 @@
+{
+  "name": "leaflet-path-transform",
+  "version": "0.0.1",
+  "description": "Scale/rotate/move plugin for leaflet vector layers ",
+  "main": "index.js",
+  "scripts": {
+    "test": "tape test/*.js",
+    "start": "npm run watch & ./node_modules/.bin/serve -p 3001",
+    "watch": "./node_modules/.bin/watchify -v -d example/js/app.js -o example/js/bundle.js",
+    "build-js": "cat ./src/Matrix.js ./src/Path.Scale.js ./src/Path.Rotate.js ./src/MultiPoly.Transform.js > ./dist/L.Path.Transform-src.js",
+    "compress": "./node_modules/.bin/uglifyjs ./dist/L.Path.Transform-src.js -o ./dist/L.Path.Transform.js -m",
+    "build": "npm run build-js && npm run compress",
+    "release": "git push origin master && git checkout gh-pages && git merge master && git push origin gh-pages && npm publish"
+  },
+  "keywords": [
+    "leaflet",
+    "vector",
+    "scale",
+    "resize",
+    "roatate",
+    "geometry",
+    "edit"
+  ],
+  "author": "Alexander Milevski <info@w8r.name>",
+  "license": "MIT",
+  "dependencies": {
+    "leaflet": "^0.7.7",
+    "leaflet-path-drag": "^0.1.13"
+  },
+  "devDependencies": {
+    "browserify": "^13.0.0",
+    "faucet": "0.0.1",
+    "serve": "^1.4.0",
+    "tape": "^4.5.1",
+    "uglifyjs": "^2.4.10",
+    "watchify": "^3.7.0"
+  }
+}
