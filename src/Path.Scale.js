@@ -5,18 +5,19 @@
  */
 L.Handler.PathScale = L.Handler.PathDrag.extend({
 
-  statics: {
-    HandlerTypes: {
-      SW: 0,
-      W:  1,
-      NW: 2,
-      N:  3,
-      NE: 4,
-      E:  5,
-      SE: 6,
-      E:  7
-    }
-  },
+  // statics: {
+  //   // in the future we might use stretching
+  //   HandlerTypes: {
+  //     SW: 0,
+  //     W:  1,
+  //     NW: 2,
+  //     N:  3,
+  //     NE: 4,
+  //     E:  5,
+  //     SE: 6,
+  //     E:  7
+  //   }
+  // },
 
   options: {
     radius: 5,
@@ -30,14 +31,32 @@ L.Handler.PathScale = L.Handler.PathDrag.extend({
    * @param  {L.Path} layer
    */
   initialize: function(layer) {
-    L.Handler.PathDrag.prototype.initialize.call(this, layer);
 
+    /**
+     * @type {L.Polygon}
+     */
     this._bounds   = null;
-    this._handlers = null;
-    this._origin   = null;
-    this._line     = null;
 
+
+    /**
+     * @type {Array.<L.CircleMarker>}
+     */
+    this._handlers = null;
+
+
+    /**
+     * @type {L.CircleMarker}
+     */
+    this._origin   = null;
+
+
+    /**
+     * @type {L.LayerGroup}
+     */
     this._handlersGroup = null;
+
+
+    L.Handler.PathDrag.prototype.initialize.call(this, layer);
   },
 
 
@@ -62,8 +81,8 @@ L.Handler.PathScale = L.Handler.PathDrag.extend({
     map.removeLayer(this._handlersGroup);
 
     this._bounds = null;
-    this._line = null;
     this._handlers = [];
+    this._handlersGroup = null;
 
     this._path
       .off('dragstart', this._onDragStart, this)
@@ -71,17 +90,29 @@ L.Handler.PathScale = L.Handler.PathDrag.extend({
   },
 
 
-  _createHandlers: function() {
-    var map = this._path._map;
+  /**
+   * Bounding polygon
+   * @return {L.Polygon}
+   */
+  _getBoundingPolygon: function() {
     var bounds = this._path.getBounds();
-    console.log(bounds.toBBoxString());
-    this._handlersGroup = new L.LayerGroup().addTo(map);
-
-    this._bounds = new L.Rectangle(bounds, {
+    return new L.Rectangle(bounds, {
       weight: 1,
       opacity: 1,
+      dashArray: [3, 3],
       fill: false
-    }).addTo(this._handlersGroup);
+    });
+  },
+
+
+  /**
+   * Interaction handles
+   */
+  _createHandlers: function() {
+    var map = this._path._map;
+
+    this._handlersGroup = new L.LayerGroup().addTo(map);
+    this._bounds = this._getBoundingPolygon().addTo(this._handlersGroup);
 
     this._handlers = [];
     for (var i = 0; i < 4; i++) {
@@ -119,6 +150,10 @@ L.Handler.PathScale = L.Handler.PathDrag.extend({
     var marker = evt.target;
     var map = marker._map;
 
+    this._handlersGroup.eachLayer(function(layer) {
+      layer.bringToFront();
+    });
+
     map.dragging.disable();
 
     this._marker = marker;
@@ -145,7 +180,6 @@ L.Handler.PathScale = L.Handler.PathDrag.extend({
    * @param  {Event} evt
    */
   _onHandlerDrag: function(evt) {
-    var marker = this._marker;
     var ratio = Math.sqrt(L.LineUtil._sqDist(
       this._origin._point, evt.layerPoint) / this._initialDist);
 
@@ -177,11 +211,13 @@ L.Handler.PathScale = L.Handler.PathDrag.extend({
    */
   _onHandlerDragEnd: function(evt) {
     var map = this._marker._map;
+    var origin = this._origin.getLatLng();
 
     this._path._resetTransform();
     this._bounds._resetTransform();
-    this._transformPoints(this._path, this._matrix, this._origin.getLatLng());
-    this._transformPoints(this._bounds, this._matrix, this._origin.getLatLng());
+
+    this._transformPoints(this._path, this._matrix, origin);
+    this._transformPoints(this._bounds, this._matrix, origin);
 
     // update handlers
     for (var i = 0, len = this._handlers.length; i < len; i++) {
@@ -205,18 +241,15 @@ L.Handler.PathScale = L.Handler.PathDrag.extend({
    * Applies transformation, does it in one sweep for performance,
    * so don't be surprised about the code repetition.
    *
-   * @param {L.Path}         path
-   * @param {L.Matrix}       matrix
+   * @param {L.Path}   path
+   * @param {L.Matrix} matrix
    */
   _transformPoints: function(path, matrix, origin) {
     var map = path._map;
-
-    var crs = map.options.crs;
-    var transformation = crs.transformation;
-    var zoom = path._map.getMaxZoom();
-
-    var point;
+    var zoom = map.getMaxZoom();
     var originPoint = map.project(origin, zoom);
+    var i, len;
+
     // update matrix
     var ratio = matrix.getScale();
     var projectedMatrix = matrix
@@ -255,16 +288,25 @@ L.Handler.PathScale = L.Handler.PathDrag.extend({
   },
 
 
+  /**
+   * Hide all handlers on drag
+   * @param  {Event} evt
+   */
   _onDragStart: function(evt) {
     this._path._map.removeLayer(this._handlersGroup);
   },
 
 
+
+  /**
+   * Re-create handlers on drag stop
+   */
   _onDragEnd: function() {
     this._createHandlers();
   }
 
 });
+
 
 L.Path.addInitHook(function() {
   if (this.options.scaleable) {

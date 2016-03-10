@@ -14,7 +14,7 @@ L.Matrix = function(a, b, c, d, e, f) {
    * @type {Array.<Number>}
    */
   this._matrix = [a, b, c, d, e, f];
-}
+};
 
 
 L.Matrix.prototype = {
@@ -40,8 +40,7 @@ L.Matrix.prototype = {
    */
   _transform: function(point) {
     var matrix = this._matrix;
-    var x = point.x;
-    var y = point.y;
+    var x = point.x, y = point.y;
     point.x = matrix[0] * x + matrix[1] * y + matrix[4];
     point.y = matrix[2] * x + matrix[3] * y + matrix[5];
     return point;
