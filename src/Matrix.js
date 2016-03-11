@@ -115,6 +115,47 @@ L.Matrix.prototype = {
       this._matrix[3] = scale.y;
     }
     return this;
+  },
+
+
+  /**
+   * @param {Number} angle
+   * @return {L.Matrix}
+   */
+  setRotation: function(angle, origin) {
+    var cos = Math.cos(angle);
+    var sin = Math.sin(angle);
+    var matrix = this._matrix;
+
+    matrix[0] = cos;
+    matrix[1] = sin;
+    matrix[2] = -sin;
+    matrix[3] = cos;
+
+    return this;
+  },
+
+
+  multiply: function(matrix) {
+    var a = this.clone()._matrix;
+    var b = matrix._matrix;
+    var aNumRows = a._matrix.length;
+    var aNumCols = a[0].length,
+    var bNumRows = b.length;
+    var bNumCols = b[0].length;
+
+    var m = new Array(aNumRows);  // initialize array of rows
+    for (var i = 0; i < aNumRows; i++) {
+      m[i] = new Array(bNumCols); // initialize the current row
+      for (var j = 0; j < bNumCols; j++) {
+        m[i][j] = 0;             // initialize the current cell
+        for (var k = 0; k < aNumCols; k++) {
+          m[i][j] += a[i][k] * b[k][i];
+        }
+      }
+    }
+    return m;
+}
   }
 
 

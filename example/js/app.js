@@ -54,9 +54,9 @@ var polygon = global.polygon = new L.Polygon(
   ), {
     color: '#f00',
     draggable: true,
-    scaleable: true
+    rotatable: true
   }).addTo(map);
-polygon.scaling.enable();
+polygon.rotating.enable();
 
 var polyline = global.polyline = new L.Polyline(
   L.GeoJSON.coordsToLatLngs([
@@ -81,6 +81,7 @@ var polyline = global.polyline = new L.Polyline(
     draggable: true,
     scaleable: true
   }).addTo(map);
+polyline.scaling.enable();
 
 
 var polygonWithHole = global.polygonWithHole = new L.Polygon(
@@ -123,10 +124,12 @@ var polygonWithHole = global.polygonWithHole = new L.Polygon(
         [114.30107116699219, 22.43387890178297]
       ])
     ], {
-      draggable: true
+      draggable: true,
+      scaleable: true
     }
   )
   .addTo(map);
+polygonWithHole.scaling.enable();
 
 var circle = new L.Circle([22.360897240132373, 114.14520263671875], 4000, {
     draggable: true
