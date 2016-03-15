@@ -73,18 +73,14 @@ L.Matrix.prototype = {
 
 
   /**
-   * @return {L.Point}
+   * @param {L.Point=|Number=} translate
+   * @return {L.Matrix|L.Point}
    */
-  getTranslate: function() {
-    return new L.Point(this._matrix[4], this._matrix[5]);
-  },
+  translate: function(translate) {
+    if (translate === undefined) {
+      return new L.Point(this._matrix[4], this._matrix[5]);
+    }
 
-
-  /**
-   * @param {L.Point|Number} translate
-   * @return {L.Matrix}
-   */
-  setTranslate: function(translate) {
     if (typeof translate === 'number') {
       this._matrix[4] = this._matrix[5] = translate;
     } else {
@@ -96,18 +92,14 @@ L.Matrix.prototype = {
 
 
   /**
-   * @return {L.Pooint}
+   * @param {L.Point=|Number=} scale
+   * @return {L.Matrix|L.Point}
    */
-  getScale: function() {
-    return new L.Point(this._matrix[0], this._matrix[3]);
-  },
+  scale: function(scale) {
+    if (scale === undefined) {
+      return new L.Point(this._matrix[0], this._matrix[3]);
+    }
 
-
-  /**
-   * @param {L.Point|Number} scale
-   * @return {L.Matrix}
-   */
-  setScale: function(scale) {
     if (typeof scale === 'number') {
       this._matrix[0] = this._matrix[3] = scale;
     } else {

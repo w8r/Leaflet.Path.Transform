@@ -44,7 +44,7 @@ L.Handler.PathScale = L.Handler.PathBounds.extend({
       originPoint, evt.layerPoint) / this._initialDist);
 
     // update matrix
-    this._matrix.setScale(ratio).setTranslate(
+    this._matrix.scale(ratio).translate(
       new L.Point(originPoint.x - originPoint.x * ratio,
         originPoint.y - originPoint.y * ratio));
 
@@ -70,10 +70,10 @@ L.Handler.PathScale = L.Handler.PathBounds.extend({
    */
   _getProjectedMatrix: function(matrix, originPoint) {
     // update matrix
-    var ratio = matrix.getScale();
+    var ratio = matrix.scale();
     return matrix
       .clone()
-      .setTranslate(
+      .translate(
         L.point(originPoint.x - originPoint.x * ratio.x,
           originPoint.y - originPoint.y * ratio.y)
       );
