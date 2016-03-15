@@ -125,11 +125,11 @@ var polygonWithHole = global.polygonWithHole = new L.Polygon(
       ])
     ], {
       draggable: true,
-      scaleable: true
+      rotatable: true
     }
   )
   .addTo(map);
-polygonWithHole.scaling.enable();
+polygonWithHole.rotating.enable();
 
 var circle = new L.Circle([22.360897240132373, 114.14520263671875], 4000, {
     draggable: true

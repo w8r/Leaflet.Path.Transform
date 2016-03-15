@@ -78,54 +78,93 @@ L.Handler.PathRotate = L.Handler.PathScale.extend({
     this._rotationHandler._initialPoint = this._rotationHandler._point.clone();
 
 
-    this._rotationOrigin = map.latLngToLayerPoint(new L.LatLng(
+    this._rotationOriginLatLng = new L.LatLng(
       (top.lat + bottom.lat) / 2,
       (top.lng + bottom.lng) / 2
-    ));
+    );
 
     this._handlers.push(this._rotationHandler);
   },
 
 
+  /**
+   * @inheritDoc
+   */
+  _getProjectedMatrix: function(matrix, originPoint) {
+    return this._initialMatrix.clone().rotate(this._angle, originPoint).flip();
+  },
+
+
+  /**
+   * @inheritDoc
+   */
+  _transformGeometries: function() {
+    L.Handler.PathBounds.prototype._transformGeometries.call(this);
+
+    this._handlerLine._resetTransform();
+    this._transformPoints(this._handlerLine, this._matrix, this._rotationOriginLatLng);
+  },
+
+
+  /**
+   * Assume we started from scratch
+   * @param  {Event} evt
+   */
   _onRotateStart: function(evt) {
-    console.log('rotate start', evt.layerPoint, this._rotationOrigin);
+    this._matrix = new L.Matrix(1, 0, 0, 1, 0, 0);
+    this._rotationOrigin = map.latLngToLayerPoint(this._rotationOriginLatLng);
     this._rotationStart = evt.layerPoint;
+    this._initialMatrix = this._matrix.clone();
     this._path._map
       .on('mousemove', this._onRotate, this)
       .on('mouseup', this._onRotateStop, this);
 
     L.Handler.PathBounds.prototype._onHandlerDragStart.call(this, evt);
     this._origin = null;
+    this._originMarker = null;
   },
 
 
+  /**
+   * Calculate absolute angle and rotate preview
+   * @param  {Object} evt
+   */
   _onRotate: function(evt) {
     var pos = evt.layerPoint;
     var previous = this._rotationStart;
     var origin = this._rotationOrigin;
 
     // rotation step angle
-    var angle = Math.atan2(previous.y - origin.y, previous.x - origin.x) -
-                Math.atan2(pos.y - origin.y, pos.x - origin.x);
-
-    this._matrix.setRotation(-angle);
-    var scale = this._matrix.getScale();
-    this._matrix.setTranslate(new L.Point(
-      origin.x - origin.x * scale.x,
-      origin.y - origin.y * scale.y
-    ));
-
-    console.log(this._rotationOrigin, this._matrix._matrix);
+    this._angle = Math.atan2(pos.y - origin.y, pos.x - origin.x) -
+                  Math.atan2(previous.y - origin.y, previous.x - origin.x);
+    this._matrix = this._initialMatrix
+      .clone()
+      .rotate(this._angle, origin)
+      .flip();
 
     this._update();
-    // console.log(radiansToDegrees(angle));
   },
 
 
+  /**
+   * Apply matrix
+   * @param  {Event} evt
+   */
   _onRotateStop: function(evt) {
     this._path._map
       .off('mousemove', this._onRotate, this)
       .off('mouseup', this._onRotateStop, this);
+    this._origin = this._rotationOriginLatLng;
+    L.Handler.PathBounds.prototype._onHandlerDragEnd.call(this, evt);
+  },
+
+
+  /**
+   * Update preview
+   */
+  _update: function() {
+    L.Handler.PathBounds.prototype._update.call(this);
+    this._handlerLine._applyTransform(this._matrix.clone().flip()._matrix);
   }
 
 

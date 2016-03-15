@@ -119,44 +119,87 @@ L.Matrix.prototype = {
 
 
   /**
-   * @param {Number} angle
+   * m00  m01  x - m00 * x - m01 * y
+   * m10  m11  y - m10 * x - m11 * y
+   * @param {Number}   angle
+   * @param {L.Point=} origin
    * @return {L.Matrix}
    */
-  setRotation: function(angle, origin) {
+  rotate: function(angle, origin) {
     var cos = Math.cos(angle);
     var sin = Math.sin(angle);
-    var matrix = this._matrix;
 
-    matrix[0] = cos;
-    matrix[1] = sin;
-    matrix[2] = -sin;
-    matrix[3] = cos;
+    origin = origin || new L.Point(0, 0);
 
+    return this
+      ._add(cos, sin, -sin, cos, origin.x, origin.y)
+      ._add(1, 0, 0, 1, -origin.x, -origin.y);
+  },
+
+
+  /**
+   * Invert rotation
+   * @return {L.Matrix}
+   */
+  flip: function() {
+    this._matrix[1] *= -1;
+    this._matrix[2] *= -1;
     return this;
   },
 
 
-  multiply: function(matrix) {
-    var a = this.clone()._matrix;
-    var b = matrix._matrix;
-    var aNumRows = a._matrix.length;
-    var aNumCols = a[0].length,
-    var bNumRows = b.length;
-    var bNumCols = b[0].length;
+  /**
+   * @param {Number|L.Matrix} a
+   * @param {Number} b
+   * @param {Number} c
+   * @param {Number} d
+   * @param {Number} e
+   * @param {Number} f
+   */
+  _add: function(a, b, c, d, e, f) {
+    var result = [[], [], []];
+    var src = this._matrix;
+    var m = [
+      [src[0], src[2], src[4]],
+      [src[1], src[3], src[5]],
+      [     0,      0,     1]
+    ];
+    var other = [
+      [a, c, e],
+      [b, d, f],
+      [0, 0, 1]
+    ], val;
 
-    var m = new Array(aNumRows);  // initialize array of rows
-    for (var i = 0; i < aNumRows; i++) {
-      m[i] = new Array(bNumCols); // initialize the current row
-      for (var j = 0; j < bNumCols; j++) {
-        m[i][j] = 0;             // initialize the current cell
-        for (var k = 0; k < aNumCols; k++) {
-          m[i][j] += a[i][k] * b[k][i];
+
+    if (a && a instanceof L.Matrix) {
+      src = a._matrix;
+      other = [
+        [src[0], src[2], src[4]],
+        [src[1], src[3], src[5]],
+        [     0,      0,     1]];
+    }
+
+    for (var i = 0; i < 3; i++) {
+      for (var j = 0; j < 3; j++) {
+        val = 0;
+        for (var k = 0; k < 3; k++) {
+          val += m[i][k] * other[k][j];
         }
+        result[i][j] = val;
       }
     }
-    return m;
-}
+
+    this._matrix = [
+      result[0][0], result[1][0], result[0][1],
+      result[1][1], result[0][2], result[1][2]
+    ];
+    return this;
   }
 
 
+};
+
+
+L.matrix = function(a, b, c, d, e, f) {
+  return new L.Matrix(a, b, c, d, e, f);
 };

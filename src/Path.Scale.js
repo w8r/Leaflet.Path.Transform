@@ -19,6 +19,7 @@ L.Handler.PathScale = L.Handler.PathBounds.extend({
   //   }
   // },
 
+
   /**
    * @inheritDoc
    */
@@ -29,7 +30,7 @@ L.Handler.PathScale = L.Handler.PathBounds.extend({
       .on('mousemove', this._onHandlerDrag, this)
       .on('mouseup', this._onHandlerDragEnd, this);
     this._initialDist = L.LineUtil._sqDist(
-      this._origin._point, this._marker._point);
+      this._originMarker._point, this._marker._point);
   },
 
 
@@ -38,10 +39,9 @@ L.Handler.PathScale = L.Handler.PathBounds.extend({
    * @param  {Event} evt
    */
   _onHandlerDrag: function(evt) {
+    var originPoint = this._originMarker._point;
     var ratio = Math.sqrt(L.LineUtil._sqDist(
-      this._origin._point, evt.layerPoint) / this._initialDist);
-
-    var originPoint = this._origin._point;
+      originPoint, evt.layerPoint) / this._initialDist);
 
     // update matrix
     this._matrix.setScale(ratio).setTranslate(

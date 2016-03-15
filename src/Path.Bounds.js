@@ -54,9 +54,15 @@ L.Handler.PathBounds = L.Handler.PathDrag.extend({
 
 
     /**
-     * @type {L.CircleMarker}
+     * @type {L.LatLng}
      */
     this._origin   = null;
+
+
+    /**
+     * @type {L.CircleMarker}
+     */
+    this._originMarker  = null;
 
 
     /**
@@ -169,7 +175,8 @@ L.Handler.PathBounds = L.Handler.PathDrag.extend({
     this._marker = marker;
 
     var counterPart = (marker.options.index + 2) % 4;
-    this._origin = this._handlers[counterPart];
+    this._originMarker = this._handlers[counterPart];
+    this._origin = this._originMarker.getLatLng();
     this._point = marker._point.clone();
 
     // cache other points
@@ -187,18 +194,38 @@ L.Handler.PathBounds = L.Handler.PathDrag.extend({
   _onHandlerDrag: function(evt) {},
 
 
+  /**
+   * Update preview
+   */
   _update: function() {
     var matrix = this._matrix;
-    this._path._applyTransform(matrix._matrix);
-    this._bounds._applyTransform(matrix._matrix);
+
     // update handlers
     for (var i = 0, len = this._handlers.length; i < len; i++) {
       var handler = this._handlers[i];
-      if (handler !== this._origin) {
-        handler._point = this._matrix.transform(handler._initialPoint);
+      if (handler !== this._originMarker) {
+        handler._point = matrix.transform(handler._initialPoint);
         handler._updatePath();
       }
     }
+
+    matrix = matrix.clone().flip();
+
+    this._path._applyTransform(matrix._matrix);
+    this._bounds._applyTransform(matrix._matrix);
+  },
+
+
+  /**
+   * Transform geometries separately
+   */
+  _transformGeometries: function() {
+    var origin = this._origin;
+    this._path._resetTransform();
+    this._bounds._resetTransform();
+
+    this._transformPoints(this._path, this._matrix, origin);
+    this._transformPoints(this._bounds, this._matrix, origin);
   },
 
 
@@ -208,13 +235,9 @@ L.Handler.PathBounds = L.Handler.PathDrag.extend({
    */
   _onHandlerDragEnd: function(evt) {
     var map = this._marker._map;
-    var origin = this._origin.getLatLng();
+    var origin = this._origin;
 
-    this._path._resetTransform();
-    this._bounds._resetTransform();
-
-    this._transformPoints(this._path, this._matrix, origin);
-    this._transformPoints(this._bounds, this._matrix, origin);
+    this._transformGeometries();
 
     // update handlers
     for (var i = 0, len = this._handlers.length; i < len; i++) {
@@ -228,6 +251,7 @@ L.Handler.PathBounds = L.Handler.PathDrag.extend({
 
     this._marker = null;
     this._origin = null;
+    this._originMarker = null;
   },
 
 
@@ -293,7 +317,7 @@ L.Handler.PathBounds = L.Handler.PathDrag.extend({
     path.projectLatlngs();
     path._updatePath();
 
-    // console.timeEnd('transform');
+    //console.timeEnd('transform');
   },
 
 
