@@ -81,13 +81,15 @@ L.Matrix.prototype = {
       return new L.Point(this._matrix[4], this._matrix[5]);
     }
 
+    var translateX, translateY;
     if (typeof translate === 'number') {
-      this._matrix[4] = this._matrix[5] = translate;
+      translateX = translateY = translate;
     } else {
-      this._matrix[4] = translate.x;
-      this._matrix[5] = translate.y;
+      translateX = translate.x;
+      translateY = translate.y;
     }
-    return this;
+
+    return this._add(1, 0, 0, 1, translateX, translateY);
   },
 
 
@@ -95,18 +97,23 @@ L.Matrix.prototype = {
    * @param {L.Point=|Number=} scale
    * @return {L.Matrix|L.Point}
    */
-  scale: function(scale) {
+  scale: function(scale, origin) {
     if (scale === undefined) {
       return new L.Point(this._matrix[0], this._matrix[3]);
     }
 
+    var scaleX, scaleY;
+    origin = origin || L.Point(0, 0);
     if (typeof scale === 'number') {
-      this._matrix[0] = this._matrix[3] = scale;
+      scaleX = scaleY = scale;
     } else {
-      this._matrix[0] = scale.x;
-      this._matrix[3] = scale.y;
+      scaleX = scale.x;
+      scaleY = scale.y;
     }
-    return this;
+
+    return this
+      ._add(scaleX, 0, 0, scaleY, origin.x, origin.y)
+      ._add(1, 0, 0, 1, -origin.x, -origin.y);
   },
 
 

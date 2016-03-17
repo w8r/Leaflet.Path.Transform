@@ -25,12 +25,13 @@ L.Handler.PathScale = L.Handler.PathBounds.extend({
    */
   _onHandlerDragStart: function(evt) {
     L.Handler.PathBounds.prototype._onHandlerDragStart.call(this, evt);
+    this._initialMatrix = this._matrix.clone();
 
     this._marker._map
       .on('mousemove', this._onHandlerDrag, this)
       .on('mouseup', this._onHandlerDragEnd, this);
-    this._initialDist = L.LineUtil._sqDist(
-      this._originMarker._point, this._marker._point);
+    this._initialDist = this._originMarker._point
+      .distanceTo(this._marker._point);
   },
 
 
@@ -40,13 +41,12 @@ L.Handler.PathScale = L.Handler.PathBounds.extend({
    */
   _onHandlerDrag: function(evt) {
     var originPoint = this._originMarker._point;
-    var ratio = Math.sqrt(L.LineUtil._sqDist(
-      originPoint, evt.layerPoint) / this._initialDist);
+    var ratio = originPoint.distanceTo(evt.layerPoint) / this._initialDist;
 
     // update matrix
-    this._matrix.scale(ratio).translate(
-      new L.Point(originPoint.x - originPoint.x * ratio,
-        originPoint.y - originPoint.y * ratio));
+    this._matrix = this._initialMatrix
+      .clone()
+      .scale(ratio, originPoint);
 
     this._update();
   },
@@ -70,13 +70,11 @@ L.Handler.PathScale = L.Handler.PathBounds.extend({
    */
   _getProjectedMatrix: function(matrix, originPoint) {
     // update matrix
-    var ratio = matrix.scale();
-    return matrix
-      .clone()
-      .translate(
-        L.point(originPoint.x - originPoint.x * ratio.x,
-          originPoint.y - originPoint.y * ratio.y)
-      );
+    var scale = matrix.scale();
+
+    return L.matrix(1, 0, 0, 1, originPoint.x, originPoint.y)
+        ._add(L.matrix(scale.x, 0, 0, scale.y, 0, 0))
+        ._add(L.matrix(1, 0, 0, 1, -originPoint.x, -originPoint.y));
   }
 
 

@@ -48,6 +48,7 @@ L.Handler.PathRotate = L.Handler.PathScale.extend({
     this._handleLine = null;
     this._rotationHandler = null;
     this._rotationOrigin = null;
+    this._angle = 0;
 
     L.Handler.PathDrag.prototype.initialize.call(this, layer);
   },
@@ -91,7 +92,8 @@ L.Handler.PathRotate = L.Handler.PathScale.extend({
    * @inheritDoc
    */
   _getProjectedMatrix: function(matrix, originPoint) {
-    return this._initialMatrix.clone().rotate(this._angle, originPoint).flip();
+    return L.matrix(1, 0, 0, 1, 0, 0)
+      .rotate(this._angle, originPoint).flip();
   },
 
 
@@ -103,6 +105,10 @@ L.Handler.PathRotate = L.Handler.PathScale.extend({
 
     this._handlerLine._resetTransform();
     this._transformPoints(this._handlerLine, this._matrix, this._rotationOriginLatLng);
+    this._rotationOriginLatLng = this._transformPoint(
+      this._rotationOriginLatLng, this._projectedMatrix,
+      this._path._map, this._path._map.getMaxZoom());
+    console.log(this._rotationOriginLatLng);
   },
 
 
@@ -115,6 +121,7 @@ L.Handler.PathRotate = L.Handler.PathScale.extend({
     this._rotationOrigin = map.latLngToLayerPoint(this._rotationOriginLatLng);
     this._rotationStart = evt.layerPoint;
     this._initialMatrix = this._matrix.clone();
+    this._angle = 0;
     this._path._map
       .on('mousemove', this._onRotate, this)
       .on('mouseup', this._onRotateStop, this);
@@ -156,6 +163,7 @@ L.Handler.PathRotate = L.Handler.PathScale.extend({
       .off('mouseup', this._onRotateStop, this);
     this._origin = this._rotationOriginLatLng;
     L.Handler.PathBounds.prototype._onHandlerDragEnd.call(this, evt);
+    this._matrix = L.matrix(1, 0, 0, 1, 0, 0);
   },
 
 

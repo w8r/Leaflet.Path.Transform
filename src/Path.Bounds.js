@@ -288,7 +288,7 @@ L.Handler.PathBounds = L.Handler.PathDrag.extend({
     var zoom = map.getMaxZoom();
     var i, len;
 
-    var projectedMatrix = this._getProjectedMatrix(
+    var projectedMatrix = this._projectedMatrix = this._getProjectedMatrix(
       matrix, map.project(origin, zoom));
 
     // console.time('transform');
@@ -328,7 +328,6 @@ L.Handler.PathBounds = L.Handler.PathDrag.extend({
   _onDragStart: function(evt) {
     this._path._map.removeLayer(this._handlersGroup);
   },
-
 
 
   /**

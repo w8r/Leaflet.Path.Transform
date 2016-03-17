@@ -4,3 +4,4 @@ require('./src/Matrix');
 require('./src/Path.Bounds');
 require('./src/Path.Scale');
 require('./src/Path.Rotate');
+require('./src/Path.Transform');
