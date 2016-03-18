@@ -103,7 +103,7 @@ L.Matrix.prototype = {
     }
 
     var scaleX, scaleY;
-    origin = origin || L.Point(0, 0);
+    origin = origin || L.point(0, 0);
     if (typeof scale === 'number') {
       scaleX = scaleY = scale;
     } else {

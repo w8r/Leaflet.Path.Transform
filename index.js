@@ -1,7 +1,6 @@
 var L = global.L || require('leaflet');
 require('leaflet-path-drag');
+require('./src/Util');
 require('./src/Matrix');
-require('./src/Path.Bounds');
-require('./src/Path.Scale');
-require('./src/Path.Rotate');
 require('./src/Path.Transform');
+require('./src/MultiPoly.Transform');

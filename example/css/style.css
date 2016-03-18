@@ -31,6 +31,11 @@ h2, h3 {
   font-size: 0.9em;
 }
 
+#controls ul {
+  padding-left: 0;
+  list-style: none;
+}
+
 #controls .wrapper {
   padding: 30px;
 }

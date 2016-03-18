@@ -7,9 +7,10 @@
     "test": "tape test/*.js",
     "start": "npm run watch & ./node_modules/.bin/serve -p 3001",
     "watch": "./node_modules/.bin/watchify -v -d example/js/app.js -o example/js/bundle.js",
-    "build-js": "cat ./src/Matrix.js ./src/Path.Scale.js ./src/Path.Rotate.js ./src/MultiPoly.Transform.js > ./dist/L.Path.Transform-src.js",
+    "lint": "./node_modules/.bin/eslint ./src/",
+    "build-js": "cat ./node_modules/leaflet-path-drag/dist/L.Path.Drag-src.js ./src/Util.js ./src/Matrix.js ./src/Path.Transform.js ./src/MultiPoly.Transform.js > ./dist/L.Path.Transform-src.js",
     "compress": "./node_modules/.bin/uglifyjs ./dist/L.Path.Transform-src.js -o ./dist/L.Path.Transform.js -m",
-    "build": "npm run build-js && npm run compress",
+    "build": "npm run lint && npm run build-js && npm run compress",
     "release": "git push origin master && git checkout gh-pages && git merge master && git push origin gh-pages && npm publish"
   },
   "keywords": [
@@ -17,7 +18,8 @@
     "vector",
     "scale",
     "resize",
-    "roatate",
+    "rotate",
+    "move",
     "geometry",
     "edit"
   ],
@@ -28,6 +30,7 @@
     "leaflet-path-drag": "^0.1.13"
   },
   "devDependencies": {
+    "eslint": "^2.4.0",
     "browserify": "^13.0.0",
     "faucet": "0.0.1",
     "serve": "^1.4.0",
