@@ -38,6 +38,15 @@ polygon.transform.setOptions({rotation: true, scaling: false});
 * **`options.handleLength`** - **Number** - Length of the rotation handle in pixels. Defaults to 20.
 
 
+### Events
+
+Following events are fired on the transformed layer
+
+* **`rotatestart`, `rotate`, `rotateend`** - `{ rotation: <Radians> }`
+* **`scalestart`, `scale`, `scaleend`** - `{ scale: <L.Point> }`
+* **`transformstart`, `transform`, `transformed`** - `{ rotation: ..., scale: ..., matrix: <L.Matrix> }`
+
+
 ### Dragging
 
 To control features dragging, see
