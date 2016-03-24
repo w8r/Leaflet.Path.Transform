@@ -1,4 +1,4 @@
-# Leaflet.Path.Transform
+# Leaflet.Path.Transform [![npm version](https://badge.fury.io/js/leaflet-path-transform.svg)](https://badge.fury.io/js/leaflet-path-transform)
 
 Drag/rotate/resize handler for [leaflet](http://leafletjs.com) vector features.
 
