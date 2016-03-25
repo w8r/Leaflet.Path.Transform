@@ -154,6 +154,11 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
      */
     this._dragInProgress = false;
 
+    /**
+     * @type {Boolean}
+     */
+    this._dragMoved = false;
+
   },
 
 
@@ -188,6 +193,7 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     if (!L.Path.CANVAS && path) {
       L.DomUtil.removeClass(path, className);
     }
+    this._dragMoved = false;
   },
 
 
@@ -195,7 +201,7 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
    * @return {Boolean}
    */
   moved: function() {
-    return this._path._dragMoved;
+    return this._dragMoved;
   },
 
 
@@ -226,7 +232,7 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     this._path._map
       .on('mousemove', this._onDrag, this)
       .on('mouseup', this._onDragEnd, this)
-    this._path._dragMoved = false;
+    this._dragMoved = false;
   },
 
 
@@ -245,8 +251,8 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     var dx = x - startPoint.x;
     var dy = y - startPoint.y;
 
-    if (!path._dragMoved && (dx || dy)) {
-      path._dragMoved = true;
+    if (!this._dragMoved && (dx || dy)) {
+      this._dragMoved = true;
       path.fire('dragstart');
 
       if (path._popup) {
@@ -306,7 +312,6 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     this._startPoint = null;
     this._point = null;
     this._dragStartPoint = null;
-    this._path._dragMoved = false;
   },
 
 
