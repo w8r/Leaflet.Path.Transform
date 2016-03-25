@@ -1385,8 +1385,6 @@ L.Handler.PathTransform = L.Handler.extend({
     this._map.addLayer(this._handlersGroup);
     this._updateHandlers();
 
-    console.log(matrix);
-
     this._path.fire('transformed', {
       scale: L.point(0, 0),
       rotation: 0,
@@ -1395,8 +1393,6 @@ L.Handler.PathTransform = L.Handler.extend({
       layer: this._path
     });
   }
-
-
 });
 
 L.Path.addInitHook(function() {
