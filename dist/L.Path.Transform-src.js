@@ -1269,7 +1269,7 @@ L.Handler.PathTransform = L.Handler.extend({
 
     this._path
       .fire('transformstart', { layer: this._path })
-      .fire('scalestart', { layer: this._path, scale: L.point(0, 0) });
+      .fire('scalestart', { layer: this._path, scale: L.point(1, 1) });
   },
 
 
@@ -1392,7 +1392,7 @@ L.Handler.PathTransform = L.Handler.extend({
     this._updateHandlers();
 
     this._path.fire('transformed', {
-      scale: L.point(0, 0),
+      scale: L.point(1, 1),
       rotation: 0,
       matrix: L.matrix.apply(undefined, matrix),
       translate: L.point(matrix[4], matrix[5]),
