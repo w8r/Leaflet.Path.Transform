@@ -5,105 +5,41 @@
 
 "use strict";
 
-if (L.Browser.svg) { // SVG transformation
-
-  L.Path.include({
-
-    /**
-     * Reset transform matrix
-     */
-    _resetTransform: function() {
-      this._container.setAttributeNS(null, 'transform', '');
-    },
-
-    /**
-     * Applies matrix transformation to SVG
-     * @param {Array.<Number>} matrix
-     */
-    _applyTransform: function(matrix) {
-      this._container.setAttributeNS(null, "transform",
-        'matrix(' + matrix.join(' ') + ')');
-    }
-
-  });
-
-} else { // VML transform routines
-
-  L.Path.include({
-
-    /**
-     * Reset transform matrix
-     */
-    _resetTransform: function() {
-      if (this._skew) {
-        // super important! workaround for a 'jumping' glitch:
-        // disable transform before removing it
-        this._skew.on = false;
-        this._container.removeChild(this._skew);
-        this._skew = null;
-      }
-    },
-
-    /**
-     * Applies matrix transformation to VML
-     * @param {Array.<Number>} matrix
-     */
-    _applyTransform: function(matrix) {
-      var skew = this._skew;
-
-      if (!skew) {
-        skew = this._createElement('skew');
-        this._container.appendChild(skew);
-        skew.style.behavior = 'url(#default#VML)';
-        this._skew = skew;
-      }
-
-      // handle skew/translate separately, cause it's broken
-      var mt = matrix[0].toFixed(8) + " " + matrix[1].toFixed(8) + " " +
-        matrix[2].toFixed(8) + " " + matrix[3].toFixed(8) + " 0 0";
-      var offset = Math.floor(matrix[4]).toFixed() + ", " +
-        Math.floor(matrix[5]).toFixed() + "";
-
-      var s = this._container.style;
-      var l = parseFloat(s.left);
-      var t = parseFloat(s.top);
-      var w = parseFloat(s.width);
-      var h = parseFloat(s.height);
-
-      if (isNaN(l)) l = 0;
-      if (isNaN(t)) t = 0;
-      if (isNaN(w) || !w) w = 1;
-      if (isNaN(h) || !h) h = 1;
-
-      var origin = (-l / w - 0.5).toFixed(8) + " " + (-t / h - 0.5).toFixed(8);
-
-      skew.on = "f";
-      skew.matrix = mt;
-      skew.origin = origin;
-      skew.offset = offset;
-      skew.on = true;
-    }
-
-  });
-}
-
 // Renderer-independent
 L.Path.include({
 
-  /**
-   * Check if the feature was dragged, that'll supress the click event
-   * on mouseup. That fixes popups for example
-   *
-   * @param  {MouseEvent} e
-   */
-  _onMouseClick: function(e) {
-    if ((this.dragging && this.dragging.moved()) ||
-      (this._map.dragging && this._map.dragging.moved())) {
-      return;
-    }
+	/**
+	 * Applies matrix transformation to SVG
+	 * @param {Array.<Number>?} matrix
+	 */
+	transform: function(matrix) {
+		if (this._renderer) {
+			if (matrix) {
+				this._renderer.transformPath(this, matrix);
+			} else {
+				// reset transform matrix
+				this._renderer._resetTransformPath(this);
+				this._update();
+			}
+		}
+		return this;
+	},
 
-    this._fireMouseEvent(e);
-  }
+	/**
+	 * Check if the feature was dragged, that'll supress the click event
+	 * on mouseup. That fixes popups for example
+	 *
+	 * @param  {MouseEvent} e
+	 */
+	_onMouseClick: function(e) {
+		if ((this.dragging && this.dragging.moved()) ||
+			(this._map.dragging && this._map.dragging.moved())) {
+			return;
+		}
+
+		this._fireMouseEvent(e);
+	}
+
 });
 /**
  * Leaflet vector features drag functionality
@@ -118,10 +54,6 @@ L.Path.include({
  * @extends {L.Handler}
  */
 L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
-
-  statics: {
-    DRAGGABLE_CLS: 'leaflet-path-draggable'
-  },
 
   /**
    * @param  {L.Path} path
@@ -152,193 +84,137 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     /**
      * @type {Boolean}
      */
-    this._dragInProgress = false;
-
-    /**
-     * @type {Boolean}
-     */
-    this._dragMoved = false;
+    this._mapDraggingWasEnabled = false;
 
   },
-
 
   /**
    * Enable dragging
    */
   addHooks: function() {
-    var className = L.Handler.PathDrag.DRAGGABLE_CLS;
-    var path      = this._path._path;
-
     this._path.on('mousedown', this._onDragStart, this);
-    this._path.options.className =
-      (this._path.options.className || '') + ' ' + className;
-
-    if (!L.Path.CANVAS && path) {
-      L.DomUtil.addClass(path, className);
+    if (this._path._path) {
+      L.DomUtil.addClass(this._path._path, 'leaflet-path-draggable');
     }
   },
-
 
   /**
    * Disable dragging
    */
   removeHooks: function() {
-    var className = L.Handler.PathDrag.DRAGGABLE_CLS;
-    var path      = this._path._path;
-
     this._path.off('mousedown', this._onDragStart, this);
-    this._path.options.className =
-      (this._path.options.className || '').replace(className, '');
-
-    if (!L.Path.CANVAS && path) {
-      L.DomUtil.removeClass(path, className);
+    if (this._path._path) {
+      L.DomUtil.removeClass(this._path._path, 'leaflet-path-draggable');
     }
-    this._dragMoved = false;
   },
-
 
   /**
    * @return {Boolean}
    */
   moved: function() {
-    return this._dragMoved;
+    return this._path._dragMoved;
   },
-
-
-  /**
-   * If dragging currently in progress.
-   *
-   * @return {Boolean}
-   */
-  inProgress: function() {
-    return this._dragInProgress;
-  },
-
 
   /**
    * Start drag
    * @param  {L.MouseEvent} evt
    */
   _onDragStart: function(evt) {
-    this._dragInProgress = true;
+    var eventType = evt.originalEvent._simulated ? 'touchstart' : evt.originalEvent.type;
+
+    this._mapDraggingWasEnabled = false;
     this._startPoint = evt.containerPoint.clone();
     this._dragStartPoint = evt.containerPoint.clone();
     this._matrix = [1, 0, 0, 1, 0, 0];
+    L.DomEvent.stop(evt.originalEvent);
 
-    if(this._path._point) {
-      this._point = this._path._point.clone();
+    L.DomUtil.addClass(this._path._renderer._container, 'leaflet-interactive');
+    L.DomEvent
+      .on(document, L.Draggable.MOVE[eventType], this._onDrag, this)
+      .on(document, L.Draggable.END[eventType], this._onDragEnd, this);
+
+    if (this._path._map.dragging.enabled()) {
+      // I guess it's required because mousdown gets simulated with a delay
+      this._path._map.dragging._draggable._onUp();
+
+      this._path._map.dragging.disable();
+      this._mapDraggingWasEnabled = true;
     }
+    this._path._dragMoved = false;
 
-    this._path._map
-      .on('mousemove', this._onDrag, this)
-      .on('mouseup', this._onDragEnd, this)
-    this._dragMoved = false;
+    if (this._path._popup) { // that might be a case on touch devices as well
+      this._path._popup._close();
+    }
   },
-
 
   /**
    * Dragging
    * @param  {L.MouseEvent} evt
    */
   _onDrag: function(evt) {
-    var x = evt.containerPoint.x;
-    var y = evt.containerPoint.y;
+    L.DomEvent.stop(evt);
 
-    var matrix     = this._matrix;
-    var path       = this._path;
-    var startPoint = this._startPoint;
+    var first = (evt.touches && evt.touches.length >= 1 ? evt.touches[0] : evt);
+    var containerPoint = this._path._map.mouseEventToContainerPoint(first);
 
-    var dx = x - startPoint.x;
-    var dy = y - startPoint.y;
+    var x = containerPoint.x;
+    var y = containerPoint.y;
 
-    if (!this._dragMoved && (dx || dy)) {
-      this._dragMoved = true;
-      path.fire('dragstart');
+    var dx = x - this._startPoint.x;
+    var dy = y - this._startPoint.y;
 
-      if (path._popup) {
-        path._popup._close();
-        path.off('click', path._openPopup, path);
-      }
+    if (!this._path._dragMoved && (dx || dy)) {
+      this._path._dragMoved = true;
+      this._path.fire('dragstart', evt);
+      // we don't want that to happen on click
+      this._path.bringToFront();
     }
 
-    matrix[4] += dx;
-    matrix[5] += dy;
+    this._matrix[4] += dx;
+    this._matrix[5] += dy;
 
-    startPoint.x = x;
-    startPoint.y = y;
+    this._startPoint.x = x;
+    this._startPoint.y = y;
 
-    path._applyTransform(matrix);
-
-    if (path._point) { // L.Circle, L.CircleMarker
-      path._point.x = this._point.x + matrix[4];
-      path._point.y = this._point.y + matrix[5];
-    }
-
-    path.fire('drag');
-    L.DomEvent.stop(evt.originalEvent);
+    this._path.fire('predrag', evt);
+    this._path.transform(this._matrix);
+    this._path.fire('drag', evt);
   },
-
 
   /**
    * Dragging stopped, apply
    * @param  {L.MouseEvent} evt
    */
   _onDragEnd: function(evt) {
-    L.DomEvent.stop(evt);
-    L.DomEvent._fakeStop({ type: 'click' });
+    var eventType = evt.type;
+    var containerPoint = this._path._map.mouseEventToContainerPoint(evt);
 
-    this._dragInProgress = false;
-    // undo container transform
-    this._path._resetTransform();
     // apply matrix
-    this._transformPoints(this._matrix);
+    if (this.moved()) {
+      this._transformPoints(this._matrix);
+      this._path._project();
+      this._path.transform(null);
+    }
 
-    this._path._map
-      .off('mousemove', this._onDrag, this)
-      .off('mouseup', this._onDragEnd, this);
+    L.DomEvent
+      .off(document, 'mousemove touchmove', this._onDrag, this)
+      .off(document, 'mouseup touchend', this._onDragEnd, this);
 
     // consistency
     this._path.fire('dragend', {
       distance: Math.sqrt(
-        L.LineUtil._sqDist(this._dragStartPoint, evt.containerPoint)
+        L.LineUtil._sqDist(this._dragStartPoint, containerPoint)
       )
     });
 
-    if (this._path._popup) {
-      L.Util.requestAnimFrame(function() {
-        this._path.on('click', this._path._openPopup, this._path);
-      }, this);
-    }
-
     this._matrix = null;
     this._startPoint = null;
-    this._point = null;
     this._dragStartPoint = null;
+
+    if (this._mapDraggingWasEnabled) {
+      this._path._map.dragging.enable();
+    }
   },
-
-
-  /**
-   * Transforms point according to the provided transformation matrix.
-   *
-   *  @param {Array.<Number>} matrix
-   *  @param {L.LatLng} point
-   */
-  _transformPoint: function(point, matrix) {
-    var path = this._path;
-
-    var px = L.point(matrix[4], matrix[5]);
-
-    var crs = path._map.options.crs;
-    var transformation = crs.transformation;
-    var scale = crs.scale(path._map.getZoom());
-    var projection = crs.projection;
-
-    var diff = transformation.untransform(px, scale)
-      .subtract(transformation.untransform(L.point(0, 0), scale));
-
-    return projection.unproject(projection.project(point)._add(diff));
-  },
-
 
   /**
    * Applies transformation, does it in one sweep for performance,
@@ -363,34 +239,30 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     var diff = transformation.untransform(px, scale)
       .subtract(transformation.untransform(L.point(0, 0), scale));
 
-    // console.time('transform');
+    path._bounds = new L.LatLngBounds();
 
+    // console.time('transform');
     // all shifts are in-place
     if (path._point) { // L.Circle
       path._latlng = projection.unproject(
         projection.project(path._latlng)._add(diff));
-      path._point = this._point._add(px);
-    } else if (path._originalPoints) { // everything else
-      for (i = 0, len = path._originalPoints.length; i < len; i++) {
-        latlng = path._latlngs[i];
-        path._latlngs[i] = projection
-          .unproject(projection.project(latlng)._add(diff));
-        path._originalPoints[i]._add(px);
+      path._point._add(px);
+    } else if (path._rings || path._parts) { // everything else
+      var rings = path._rings || path._parts;
+      var latlngs = path._latlngs;
+      if (!L.Util.isArray(latlngs[0])) { // polyline
+        latlngs = [latlngs];
       }
-    }
-
-    // holes operations
-    if (path._holes) {
-      for (i = 0, len = path._holes.length; i < len; i++) {
-        for (var j = 0, len2 = path._holes[i].length; j < len2; j++) {
-          latlng = path._holes[i][j];
-          path._holes[i][j] = projection
+      for (i = 0, len = rings.length; i < len; i++) {
+        for (var j = 0, jj = rings[i].length; j < jj; j++) {
+          latlng = latlngs[i][j];
+          latlngs[i][j] = projection
             .unproject(projection.project(latlng)._add(diff));
-          path._holePoints[i][j]._add(px);
+          path._bounds.extend(latlngs[i][j]);
+          rings[i][j]._add(px);
         }
       }
     }
-
     // console.timeEnd('transform');
 
     path._updatePath();
@@ -398,8 +270,6 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
 
 });
 
-
-// Init hook instead of replacing the `initEvents`
 L.Path.addInitHook(function() {
   if (this.options.draggable) {
     if (this.dragging) {
@@ -412,114 +282,168 @@ L.Path.addInitHook(function() {
     this.dragging.disable();
   }
 });
+L.SVG.include({
 
-/*
- * Return transformed points in case if dragging is enabled and in progress,
- * otherwise - call original method.
- *
- * For L.Circle and L.Polyline
- */
+	/**
+	 * Reset transform matrix
+	 */
+	_resetTransformPath: function(layer) {
+		layer._path.setAttributeNS(null, 'transform', '');
+	},
 
-// don't like this? me neither, but I like it even less
-// when the original methods are not exposed
-L.Circle.prototype._getLatLng = L.Circle.prototype.getLatLng;
-L.Circle.prototype.getLatLng = function() {
-  if (this.dragging && this.dragging.inProgress()) {
-    return this.dragging._transformPoint(this._latlng, this.dragging._matrix);
-  } else {
-    return this._getLatLng();
-  }
+	/**
+	 * Applies matrix transformation to SVG
+	 * @param {L.Path}         layer
+	 * @param {Array.<Number>} matrix
+	 */
+	transformPath: function(layer, matrix) {
+		layer._path.setAttributeNS(null, "transform",
+			'matrix(' + matrix.join(' ') + ')');
+	}
+
+});
+L.SVG.include(!L.Browser.vml ? {} : {
+
+	/**
+	 * Reset transform matrix
+	 */
+	_resetTransformPath: function(layer) {
+		if (layer._skew) {
+			// super important! workaround for a 'jumping' glitch:
+			// disable transform before removing it
+			layer._skew.on = false;
+			layer._path.removeChild(layer._skew);
+			layer._skew = null;
+		}
+	},
+
+	/**
+	 * Applies matrix transformation to VML
+	 * @param {L.Path}         layer
+	 * @param {Array.<Number>} matrix
+	 */
+	transformPath: function(layer, matrix) {
+		var skew = layer._skew;
+
+		if (!skew) {
+			skew = L.SVG.create('skew');
+			layer._path.appendChild(skew);
+			skew.style.behavior = 'url(#default#VML)';
+			layer._skew = skew;
+		}
+
+		// handle skew/translate separately, cause it's broken
+		var mt = matrix[0].toFixed(8) + " " + matrix[1].toFixed(8) + " " +
+			matrix[2].toFixed(8) + " " + matrix[3].toFixed(8) + " 0 0";
+		var offset = Math.floor(matrix[4]).toFixed() + ", " +
+			Math.floor(matrix[5]).toFixed() + "";
+
+		var s = this._path.style;
+		var l = parseFloat(s.left);
+		var t = parseFloat(s.top);
+		var w = parseFloat(s.width);
+		var h = parseFloat(s.height);
+
+		if (isNaN(l)) l = 0;
+		if (isNaN(t)) t = 0;
+		if (isNaN(w) || !w) w = 1;
+		if (isNaN(h) || !h) h = 1;
+
+		var origin = (-l / w - 0.5).toFixed(8) + " " + (-t / h - 0.5).toFixed(8);
+
+		skew.on = "f";
+		skew.matrix = mt;
+		skew.origin = origin;
+		skew.offset = offset;
+		skew.on = true;
+	}
+
+});
+L.Util.trueFn = function() {
+  return true;
 };
 
-
-L.Polyline.prototype._getLatLngs = L.Polyline.prototype.getLatLngs;
-L.Polyline.prototype.getLatLngs = function() {
-  if (this.dragging && this.dragging.inProgress()) {
-    var matrix = this.dragging._matrix;
-    var points = this._getLatLngs();
-    for (var i = 0, len = points.length; i < len; i++) {
-      points[i] = this.dragging._transformPoint(points[i], matrix);
-    }
-    return points;
-  } else {
-    return this._getLatLngs();
-  }
-};
-(function() {
-
-  // listen and propagate dragstart on sub-layers
-  L.FeatureGroup.EVENTS += ' dragstart';
-
-  function wrapMethod(klasses, methodName, method) {
-    for (var i = 0, len = klasses.length; i < len; i++) {
-      var klass = klasses[i];
-      klass.prototype['_' + methodName] = klass.prototype[methodName];
-      klass.prototype[methodName] = method;
-    }
-  }
+L.Canvas.include({
 
   /**
-   * @param {L.Polygon|L.Polyline} layer
-   * @return {L.MultiPolygon|L.MultiPolyline}
+   * Do nothing
+   * @param  {L.Path} layer
    */
-  function addLayer(layer) {
-    if (this.hasLayer(layer)) {
-      return this;
+  _resetTransformPath: function(layer) {
+    if (!this._containerCopy) {
+      return;
     }
-    layer
-      .on('drag', this._onDrag, this)
-      .on('dragend', this._onDragEnd, this);
-    return this._addLayer.call(this, layer);
-  }
+
+    delete this._containerCopy;
+
+    if (layer._containsPoint_) {
+      layer._containsPoint = layer._containsPoint_;
+      delete layer._containsPoint_;
+
+      this._requestRedraw(layer);
+      this._draw(true);
+    }
+  },
 
   /**
-   * @param  {L.Polygon|L.Polyline} layer
-   * @return {L.MultiPolygon|L.MultiPolyline}
+   * Algorithm outline:
+   *
+   * 1. pre-transform - clear the path out of the canvas, copy canvas state
+   * 2. at every frame:
+   *    2.1. save
+   *    2.2. redraw the canvas from saved one
+   *    2.3. transform
+   *    2.4. draw path
+   *    2.5. restore
+   *
+   * @param  {L.Path} layer
+   * @param  {Array.<Number>} matrix
    */
-  function removeLayer(layer) {
-    if (!this.hasLayer(layer)) {
-      return this;
+  transformPath: function(layer, matrix) {
+    var copy = this._containerCopy;
+    var ctx = this._ctx;
+    var m = L.Browser.retina ? 2 : 1;
+    var bounds = this._bounds;
+    var size = bounds.getSize();
+    var pos = bounds.min;
+
+    if (!copy) {
+      copy = this._containerCopy = document.createElement('canvas');
+      document.body.appendChild(copy);
+
+      copy.width = m * size.x;
+      copy.height = m * size.y;
+
+      layer._removed = true;
+      this._redraw();
+
+      copy.getContext('2d').translate(m * bounds.min.x, m * bounds.min.y);
+      copy.getContext('2d').drawImage(this._container, 0, 0);
+      this._initPath(layer);
+      layer._containsPoint_ = layer._containsPoint;
+      layer._containsPoint = L.Util.trueFn;
     }
-    layer
-      .off('drag', this._onDrag, this)
-      .off('dragend', this._onDragEnd, this);
-    return this._removeLayer.call(this, layer);
+
+    ctx.save();
+    ctx.clearRect(pos.x, pos.y, size.x * m, size.y * m);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.restore();
+    ctx.save();
+
+    ctx.drawImage(this._containerCopy, 0, 0, size.x, size.y);
+    ctx.transform.apply(ctx, matrix);
+
+    var layers = this._layers;
+    this._layers = {};
+
+    this._initPath(layer);
+    layer._updatePath();
+
+    this._layers = layers;
+    ctx.restore();
   }
 
-  // duck-type methods to listen to the drag events
-  wrapMethod([L.MultiPolygon, L.MultiPolyline], 'addLayer', addLayer);
-  wrapMethod([L.MultiPolygon, L.MultiPolyline], 'removeLayer', removeLayer);
-
-  var dragMethods = {
-    _onDrag: function(evt) {
-      var layer = evt.target;
-      this.eachLayer(function(otherLayer) {
-        if (otherLayer !== layer) {
-          otherLayer._applyTransform(layer.dragging._matrix);
-        }
-      });
-
-      this._propagateEvent(evt);
-    },
-
-    _onDragEnd: function(evt) {
-      var layer = evt.target;
-
-      this.eachLayer(function(otherLayer) {
-        if (otherLayer !== layer) {
-          otherLayer._resetTransform();
-          otherLayer.dragging._transformPoints(layer.dragging._matrix);
-        }
-      });
-
-      this._propagateEvent(evt);
-    }
-  };
-
-  L.MultiPolygon.include(dragMethods);
-  L.MultiPolyline.include(dragMethods);
-
-})();
+});
 /**
  * Point on the line segment or its extention
  *
@@ -1117,7 +1041,7 @@ L.Handler.PathTransform = L.Handler.extend({
       for (var i = 0; i < this.options.edgesCount; i++) {
         // TODO: add stretching
         this._handlers.push(
-          this._createHandler(this._rect._latlngs[i], i * 2, i)
+          this._createHandler(this._rect._latlngs[0][i], i * 2, i)
           .addTo(this._handlersGroup));
       }
     }
@@ -1135,7 +1059,7 @@ L.Handler.PathTransform = L.Handler.extend({
    */
   _createRotationHandlers: function() {
     var map     = this._map;
-    var latlngs = this._rect._latlngs;
+    var latlngs = this._rect._latlngs[0];
 
     var bottom   = new L.LatLng(
       (latlngs[0].lat + latlngs[3].lat) / 2,
@@ -1172,7 +1096,7 @@ L.Handler.PathTransform = L.Handler.extend({
    * @return {L.LatLng}
    */
   _getRotationOrigin: function() {
-    var latlngs = this._rect._latlngs;
+    var latlngs = this._rect._latlngs[0];
     var lb = latlngs[0];
     var rt = latlngs[2];
 
@@ -1406,61 +1330,3 @@ L.Path.addInitHook(function() {
     this.transform = new L.Handler.PathTransform(this, this.options.transform);
   }
 });
-/**
- * Implements scaling/rotation for multi-layer geometries in leaflet 0.7.x
- */
-L.Handler.MultiPathTransform = L.Handler.PathTransform.extend({
-
-  /**
-   * @inheritDoc
-   */
-  _applyTransform: function(matrix) {
-    this._path.eachLayer(function(layer) {
-      layer._applyTransform(matrix._matrix);
-    });
-
-    this._rect._applyTransform(matrix._matrix);
-
-    if (this.options.rotation) {
-      this._handleLine._applyTransform(matrix._matrix);
-    }
-  },
-
-
-  /**
-   * @inheritDoc
-   */
-  _transformGeometries: function() {
-    var origin = this._origin;
-    this._rect._resetTransform();
-
-    this._path.eachLayer(function(layer) {
-      layer._resetTransform();
-      this._transformPoints(layer, this._matrix, origin);
-    }, this);
-
-    this._transformPoints(this._rect, this._matrix, origin);
-
-    if (this.options.rotation) {
-      this._handleLine._resetTransform();
-      this._transformPoints(this._handleLine, this._matrix, origin);
-    }
-  }
-
-});
-
-
-// init hooks
-(function(klasses) {
-  function transformInitHook() {
-    if (this._options.transform) {
-      this.transform = new L.Handler.MultiPathTransform(
-        this, this._options.transform);
-    }
-  }
-
-  for (var i = klasses.length - 1; i >= 0; i--) {
-    klasses[i].addInitHook(transformInitHook);
-  }
-
-})([L.MultiPolyline, L.MultiPolygon]);

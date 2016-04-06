@@ -8,7 +8,7 @@
     "start": "npm run watch & ./node_modules/.bin/serve -p 3001",
     "watch": "./node_modules/.bin/watchify -v -d example/js/app.js -o example/js/bundle.js",
     "lint": "./node_modules/.bin/eslint ./src/",
-    "build-js": "cat ./node_modules/leaflet-path-drag/dist/L.Path.Drag-src.js ./src/Util.js ./src/Matrix.js ./src/Path.Transform.js ./src/MultiPoly.Transform.js > ./dist/L.Path.Transform-src.js",
+    "build-js": "cat ./node_modules/leaflet-path-drag/dist/L.Path.Drag-src.js ./src/Util.js ./src/Matrix.js ./src/Path.Transform.js > ./dist/L.Path.Transform-src.js",
     "compress": "./node_modules/.bin/uglifyjs ./dist/L.Path.Transform-src.js -o ./dist/L.Path.Transform.js -m",
     "build": "npm run lint && npm run build-js && npm run compress",
     "release": "git push origin master && git checkout gh-pages && git merge master && git push origin gh-pages && npm publish"
@@ -26,8 +26,8 @@
   "author": "Alexander Milevski <info@w8r.name>",
   "license": "MIT",
   "dependencies": {
-    "leaflet": "^0.7.7",
-    "leaflet-path-drag": "^0.1.15"
+    "leaflet": "^1.0.0-beta.2",
+    "leaflet-path-drag": "^1.0.0-beta.1"
   },
   "devDependencies": {
     "eslint": "^2.4.0",

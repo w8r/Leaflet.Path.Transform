@@ -340,7 +340,7 @@ L.Handler.PathTransform = L.Handler.extend({
       for (var i = 0; i < this.options.edgesCount; i++) {
         // TODO: add stretching
         this._handlers.push(
-          this._createHandler(this._rect._latlngs[i], i * 2, i)
+          this._createHandler(this._rect._latlngs[0][i], i * 2, i)
           .addTo(this._handlersGroup));
       }
     }
@@ -358,7 +358,7 @@ L.Handler.PathTransform = L.Handler.extend({
    */
   _createRotationHandlers: function() {
     var map     = this._map;
-    var latlngs = this._rect._latlngs;
+    var latlngs = this._rect._latlngs[0];
 
     var bottom   = new L.LatLng(
       (latlngs[0].lat + latlngs[3].lat) / 2,
@@ -395,7 +395,7 @@ L.Handler.PathTransform = L.Handler.extend({
    * @return {L.LatLng}
    */
   _getRotationOrigin: function() {
-    var latlngs = this._rect._latlngs;
+    var latlngs = this._rect._latlngs[0];
     var lb = latlngs[0];
     var rt = latlngs[2];
 

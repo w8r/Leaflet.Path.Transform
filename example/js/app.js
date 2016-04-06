@@ -133,7 +133,7 @@ var polygonWithHole = global.polygonWithHole = new L.Polygon(
   .addTo(map);
 //polygonWithHole.transform.enable();
 
-var multiPolygon = global.multiPolygon = new L.MultiPolygon([
+var multiPolygon = global.multiPolygon = new L.Polygon([
   L.GeoJSON.coordsToLatLngs([
     [114.20562744140625, 22.32085984100593],
     [114.21592712402344, 22.35261603551215],
@@ -180,7 +180,7 @@ var multiPolygon = global.multiPolygon = new L.MultiPolygon([
 }).bindPopup('MultiPolygon').addTo(map);
 //multiPolygon.transform.enable();
 
-var multiPolyline = global.multiPolyline = new L.MultiPolyline([
+var multiPolyline = global.multiPolyline = new L.Polyline([
   L.GeoJSON.coordsToLatLngs([
     [113.89869689941406, 22.399601921706953],
     [113.89801025390625, 22.422454181709707],
