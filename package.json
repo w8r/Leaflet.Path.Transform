@@ -27,7 +27,7 @@
   "license": "MIT",
   "dependencies": {
     "leaflet": "^1.0.0-beta.2",
-    "leaflet-path-drag": "^1.0.0-beta.1"
+    "leaflet-path-drag": "^1.0.0-beta.2"
   },
   "devDependencies": {
     "eslint": "^2.4.0",

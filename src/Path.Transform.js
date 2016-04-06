@@ -9,7 +9,9 @@ L.Handler.PathTransform = L.Handler.extend({
       radius:      5,
       fillColor:   '#ffffff',
       color:       '#202020',
-      fillOpacity: 1
+      fillOpacity: 1,
+      weight:      2,
+      opacity:     0.7
     },
 
     // rectangle
@@ -155,11 +157,11 @@ L.Handler.PathTransform = L.Handler.extend({
    * @param  {L.Matrix} matrix
    */
   _applyTransform: function(matrix) {
-    this._path._applyTransform(matrix._matrix);
-    this._rect._applyTransform(matrix._matrix);
+    this._path._transform(matrix._matrix);
+    this._rect._transform(matrix._matrix);
 
     if (this.options.rotation) {
-      this._handleLine._applyTransform(matrix._matrix);
+      this._handleLine._transform(matrix._matrix);
     }
   },
 
@@ -228,14 +230,14 @@ L.Handler.PathTransform = L.Handler.extend({
    */
   _transformGeometries: function() {
     var origin = this._origin;
-    this._path._resetTransform();
-    this._rect._resetTransform();
+    this._path._transform(null);
+    this._rect._transform(null);
 
     this._transformPoints(this._path, this._matrix, origin);
     this._transformPoints(this._rect, this._matrix, origin);
 
     if (this.options.rotation) {
-      this._handleLine._resetTransform();
+      this._handleLine._transform(null);
       this._transformPoints(this._handleLine, this._matrix, origin);
     }
   },
@@ -301,26 +303,23 @@ L.Handler.PathTransform = L.Handler.extend({
     if (path._point) { // L.Circle
       path._latlng = this._transformPoint(
         path._latlng, projectedMatrix, map, zoom);
-    } else if (path._originalPoints) { // everything else
-      for (i = 0, len = path._originalPoints.length; i < len; i++) {
-        path._latlngs[i] = this._transformPoint(
-          path._latlngs[i], projectedMatrix, map, zoom);
-      }
-    }
+    } else if (path._rings || path._parts) { // everything else
+      var rings = path._rings;
+      var latlngs = path._latlngs;
 
-    // holes operations
-    if (path._holes) {
-      for (i = 0, len = path._holes.length; i < len; i++) {
-        for (var j = 0, len2 = path._holes[i].length; j < len2; j++) {
-          path._holes[i][j] = this._transformPoint(
-            path._holes[i][j], projectedMatrix, map, zoom);
+      if (!L.Util.isArray(latlngs[0])) { // polyline
+        latlngs = [latlngs];
+      }
+      for (i = 0, len = rings.length; i < len; i++) {
+        for (var j = 0, jj = rings[i].length; j < jj; j++) {
+          latlngs[i][j] = this._transformPoint(
+            latlngs[i][j], projectedMatrix, map, zoom);
+          path._bounds.extend(latlngs[i][j]);
         }
       }
     }
 
-    path.projectLatlngs();
-    path._updatePath();
-
+    path._reset();
     //console.timeEnd('transform');
   },
 
