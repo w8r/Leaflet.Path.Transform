@@ -65,8 +65,8 @@ polygon.dragging.enable();
 
  - [ ] Tests
  - [ ] Precision fix for rotation
- - [ ] Leaflet 1.x support
- - [ ] [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable) adapter
+ - [x] Leaflet 1.x support
+ - [x] [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable) adapter - [Leaflet.Editable.Drag](https://github.com/w8r/Leaflet.Editable.Drag)
  - [ ] [Leaflet.draw](https://github.com/Leaflet/Leaflet.draw) adapter
  - [ ] Canvas renderer support
 
