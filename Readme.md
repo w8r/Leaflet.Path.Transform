@@ -11,6 +11,8 @@ need to include it once again.
 
 Leaflet 0.7.3 +
 
+For `Leaflet@^1.0.0` support, see `leaflet-1.0` branch and `1.0.0x` npm versions
+
 ### API
 ```shell
 npm install leaflet-path-transform --save
