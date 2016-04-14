@@ -1,8 +1,13 @@
 /**
- * Matrix transform path for SVG/VML
+ * Leaflet vector features drag functionality
+ * @author Alexander Milevski <info@w8r.name>
+ * @preserve
  */
 
-// Renderer-independent
+/**
+ * Matrix transform path for SVG/VML
+ * Renderer-independent
+ */
 L.Path.include({
 
 	/**
@@ -39,13 +44,6 @@ L.Path.include({
 
 });
 /**
- * Leaflet vector features drag functionality
- * @preserve
- */
-
-"use strict";
-
-/**
  * Drag handler
  * @class L.Path.Drag
  * @extends {L.Handler}
@@ -53,7 +51,7 @@ L.Path.include({
 L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
 
   statics: {
-    DRAGGING_CLS: 'leaflet-path-draggable'
+    DRAGGING_CLS: 'leaflet-path-draggable',
   },
 
 
@@ -155,6 +153,8 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     if (this._path._popup) { // that might be a case on touch devices as well
       this._path._popup._close();
     }
+
+    this._replaceCoordGetters(evt);
   },
 
   /**
@@ -196,19 +196,19 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
    * @param  {L.MouseEvent} evt
    */
   _onDragEnd: function(evt) {
-    var eventType = evt.type;
     var containerPoint = this._path._map.mouseEventToContainerPoint(evt);
 
     // apply matrix
     if (this.moved()) {
       this._transformPoints(this._matrix);
+      this._path._updatePath();
       this._path._project();
       this._path._transform(null);
     }
 
     L.DomEvent
       .off(document, 'mousemove touchmove', this._onDrag, this)
-      .off(document, 'mouseup touchend', this._onDragEnd, this);
+      .off(document, 'mouseup touchend',    this._onDragEnd, this);
 
     // consistency
     this._path.fire('dragend', {
@@ -217,14 +217,16 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
       )
     });
 
-    this._matrix = null;
-    this._startPoint = null;
+    this._matrix         = null;
+    this._startPoint     = null;
     this._dragStartPoint = null;
 
     if (this._mapDraggingWasEnabled) {
       this._path._map.dragging.enable();
     }
+    this._restoreCoordGetters();
   },
+
 
   /**
    * Applies transformation, does it in one sweep for performance,
@@ -235,7 +237,7 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
    *
    * @param {Array.<Number>} matrix
    */
-  _transformPoints: function(matrix) {
+  _transformPoints: function(matrix, dest) {
     var path = this._path;
     var i, len, latlng;
 
@@ -248,37 +250,99 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
 
     var diff = transformation.untransform(px, scale)
       .subtract(transformation.untransform(L.point(0, 0), scale));
+    var applyTransform = !dest;
 
     path._bounds = new L.LatLngBounds();
 
     // console.time('transform');
     // all shifts are in-place
     if (path._point) { // L.Circle
-      path._latlng = projection.unproject(
+      dest = projection.unproject(
         projection.project(path._latlng)._add(diff));
-      path._point._add(px);
+      if (applyTransform) {
+        path._latlng = dest;
+        path._point._add(px);
+      }
     } else if (path._rings || path._parts) { // everything else
-      var rings = path._rings || path._parts;
+      var rings   = path._rings || path._parts;
       var latlngs = path._latlngs;
+      dest = dest || latlngs;
       if (!L.Util.isArray(latlngs[0])) { // polyline
         latlngs = [latlngs];
+        dest    = [dest];
       }
       for (i = 0, len = rings.length; i < len; i++) {
+        dest[i] = dest[i] || [];
         for (var j = 0, jj = rings[i].length; j < jj; j++) {
-          latlng = latlngs[i][j];
-          latlngs[i][j] = projection
+          latlng     = latlngs[i][j];
+          dest[i][j] = projection
             .unproject(projection.project(latlng)._add(diff));
-          path._bounds.extend(latlngs[i][j]);
-          rings[i][j]._add(px);
+          if (applyTransform) {
+            path._bounds.extend(latlngs[i][j]);
+            rings[i][j]._add(px);
+          }
         }
       }
     }
+    return dest;
     // console.timeEnd('transform');
+  },
 
-    path._updatePath();
+
+
+  /**
+   * If you want to read the latlngs during the drag - your right,
+   * but they have to be transformed
+   */
+  _replaceCoordGetters: function() {
+    if (this._path.getLatLng) { // Circle, CircleMarker
+      this._path.getLatLng_ = this._path.getLatLng;
+      this._path.getLatLng = L.Util.bind(function() {
+        return this.dragging._transformPoints(this.dragging._matrix, {});
+      }, this._path);
+    } else if (this._path.getLatLngs) {
+      this._path.getLatLngs_ = this._path.getLatLngs;
+      this._path.getLatLngs = L.Util.bind(function() {
+        return this.dragging._transformPoints(this.dragging._matrix, []);
+      }, this._path);
+    }
+  },
+
+
+  /**
+   * Put back the getters
+   */
+  _restoreCoordGetters: function() {
+    if (this._path.getLatLng_) {
+      this._path.getLatLng = this._path.getLatLng_;
+      delete this._path.getLatLng_;
+    } else if (this._path.getLatLngs_) {
+      this._path.getLatLngs = this._path.getLatLngs_;
+      delete this._path.getLatLngs_;
+    }
   }
 
 });
+
+
+/**
+ * @param  {L.Path} layer
+ * @return {L.Path}
+ */
+L.Handler.PathDrag.makeDraggable = function(layer) {
+  layer.dragging = new L.Handler.PathDrag(layer);
+  return layer;
+};
+
+
+/**
+ * Also expose as a method
+ * @return {L.Path}
+ */
+L.Path.prototype.makeDraggable = function() {
+  return L.Handler.PathDrag.makeDraggable(this);
+};
+
 
 L.Path.addInitHook(function() {
   if (this.options.draggable) {
@@ -288,7 +352,7 @@ L.Path.addInitHook(function() {
     if (this.dragging) {
       this.dragging.enable();
     } else {
-      this.dragging = new L.Handler.PathDrag(this);
+      L.Handler.PathDrag.makeDraggable(this);
       this.dragging.enable();
     }
   } else if (this.dragging) {
@@ -310,7 +374,7 @@ L.SVG.include({
 	 * @param {Array.<Number>} matrix
 	 */
 	transformPath: function(layer, matrix) {
-		layer._path.setAttributeNS(null, "transform",
+		layer._path.setAttributeNS(null, 'transform',
 			'matrix(' + matrix.join(' ') + ')');
 	}
 
@@ -346,10 +410,10 @@ L.SVG.include(!L.Browser.vml ? {} : {
 		}
 
 		// handle skew/translate separately, cause it's broken
-		var mt = matrix[0].toFixed(8) + " " + matrix[1].toFixed(8) + " " +
-			matrix[2].toFixed(8) + " " + matrix[3].toFixed(8) + " 0 0";
-		var offset = Math.floor(matrix[4]).toFixed() + ", " +
-			Math.floor(matrix[5]).toFixed() + "";
+		var mt = matrix[0].toFixed(8) + ' ' + matrix[1].toFixed(8) + ' ' +
+			matrix[2].toFixed(8) + ' ' + matrix[3].toFixed(8) + ' 0 0';
+		var offset = Math.floor(matrix[4]).toFixed() + ', ' +
+			Math.floor(matrix[5]).toFixed() + '';
 
 		var s = this._path.style;
 		var l = parseFloat(s.left);
@@ -357,14 +421,14 @@ L.SVG.include(!L.Browser.vml ? {} : {
 		var w = parseFloat(s.width);
 		var h = parseFloat(s.height);
 
-		if (isNaN(l)) l = 0;
-		if (isNaN(t)) t = 0;
-		if (isNaN(w) || !w) w = 1;
-		if (isNaN(h) || !h) h = 1;
+		if (isNaN(l)) { l = 0; }
+		if (isNaN(t)) { t = 0; }
+		if (isNaN(w) || !w) { w = 1; }
+		if (isNaN(h) || !h) { h = 1; }
 
-		var origin = (-l / w - 0.5).toFixed(8) + " " + (-t / h - 0.5).toFixed(8);
+		var origin = (-l / w - 0.5).toFixed(8) + ' ' + (-t / h - 0.5).toFixed(8);
 
-		skew.on = "f";
+		skew.on = 'f';
 		skew.matrix = mt;
 		skew.origin = origin;
 		skew.offset = offset;
