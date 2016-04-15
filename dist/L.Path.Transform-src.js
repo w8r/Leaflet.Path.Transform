@@ -196,6 +196,9 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
    * @param  {L.MouseEvent} evt
    */
   _onDragEnd: function(evt) {
+    L.DomEvent.stop(evt);
+    L.DomEvent._fakeStop({ type: 'click' });
+
     var containerPoint = this._path._map.mouseEventToContainerPoint(evt);
 
     // apply matrix
@@ -210,6 +213,7 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
       .off(document, 'mousemove touchmove', this._onDrag, this)
       .off(document, 'mouseup touchend',    this._onDragEnd, this);
 
+    this._restoreCoordGetters();
     // consistency
     this._path.fire('dragend', {
       distance: Math.sqrt(
@@ -224,7 +228,6 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     if (this._mapDraggingWasEnabled) {
       this._path._map.dragging.enable();
     }
-    this._restoreCoordGetters();
   },
 
 
