@@ -295,8 +295,6 @@ L.Handler.PathTransform = L.Handler.extend({
     var i, len;
 
     var projectedMatrix = this._projectedMatrix = this._getProjectedMatrix();
-    // console.log(this._projectedMatrix._matrix);
-
     // console.time('transform');
 
     // all shifts are in-place
@@ -314,7 +312,7 @@ L.Handler.PathTransform = L.Handler.extend({
         for (var j = 0, jj = rings[i].length; j < jj; j++) {
           latlngs[i][j] = this._transformPoint(
             latlngs[i][j], projectedMatrix, map, zoom);
-          path._bounds.extend(latlngs[i][j]);
+          //path._bounds.extend(latlngs[i][j]);
         }
       }
     }

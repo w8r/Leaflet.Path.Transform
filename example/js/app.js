@@ -1,4 +1,4 @@
-var L = global.L || require('leaflet');
+var L = require('leaflet');
 var DragHandler = require('../../index');
 
 L.Icon.Default.imagePath = "http://cdn.leafletjs.com/leaflet-0.7/images";
