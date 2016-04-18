@@ -304,6 +304,7 @@ L.Handler.PathTransform = L.Handler.extend({
     } else if (path._rings || path._parts) { // everything else
       var rings = path._rings;
       var latlngs = path._latlngs;
+      path._bounds = new L.LatLngBounds();
 
       if (!L.Util.isArray(latlngs[0])) { // polyline
         latlngs = [latlngs];
@@ -312,7 +313,7 @@ L.Handler.PathTransform = L.Handler.extend({
         for (var j = 0, jj = rings[i].length; j < jj; j++) {
           latlngs[i][j] = this._transformPoint(
             latlngs[i][j], projectedMatrix, map, zoom);
-          //path._bounds.extend(latlngs[i][j]);
+          path._bounds.extend(latlngs[i][j]);
         }
       }
     }
@@ -606,6 +607,8 @@ L.Handler.PathTransform = L.Handler.extend({
     rect.dragging.enable();
     this._map.addLayer(rect);
     rect.dragging._transformPoints(matrix);
+    rect._updatePath();
+    rect._project();
     rect.dragging.disable();
 
     this._map.addLayer(this._handlersGroup);
