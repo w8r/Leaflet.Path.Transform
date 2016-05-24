@@ -925,7 +925,7 @@ L.Handler.PathTransform = L.Handler.extend({
    * @return {L.Handler.PathTransform}
    */
   rotate: function(angle, origin) {
-    this.transform(angle, null, origin);
+    return this.transform(angle, null, origin);
   },
 
 
@@ -938,7 +938,7 @@ L.Handler.PathTransform = L.Handler.extend({
     if (typeof scale === 'number') {
       scale = L.point(scale, scale);
     }
-    this.transform(0, scale, null, origin);
+    return this.transform(0, scale, null, origin);
   },
 
 
@@ -953,7 +953,9 @@ L.Handler.PathTransform = L.Handler.extend({
     var center     = this._path.getCenter();
     rotationOrigin = rotationOrigin || center;
     scaleOrigin    = scaleOrigin    || center;
+    this._map = this._path._map;
     this._transformPoints(this._path, angle, scale, rotationOrigin, scaleOrigin);
+    return this;
   },
 
 
