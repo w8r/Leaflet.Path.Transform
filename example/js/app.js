@@ -53,6 +53,7 @@ var polygon = global.polygon = new L.Polygon(
     ], 1000)
   ), {
     color: '#f00',
+    interactive: true,
     draggable: true,
     transform: true
   }).addTo(map);

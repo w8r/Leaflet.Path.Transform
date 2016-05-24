@@ -920,6 +920,44 @@ L.Handler.PathTransform = L.Handler.extend({
 
 
   /**
+   * @param  {Number}   angle
+   * @param  {L.LatLng} origin
+   * @return {L.Handler.PathTransform}
+   */
+  rotate: function(angle, origin) {
+    this.transform(angle, null, origin);
+  },
+
+
+  /**
+   * @param  {L.Point|Number} scale
+   * @param  {L.LatLng}       origin
+   * @return {L.Handler.PathTransform}
+   */
+  scale: function(scale, origin) {
+    if (typeof scale === 'number') {
+      scale = L.point(scale, scale);
+    }
+    this.transform(0, scale, null, origin);
+  },
+
+
+  /**
+   * @param  {Number}    angle
+   * @param  {L.Point}   scale
+   * @param  {L.LatLng=} rotationOrigin
+   * @param  {L.LatLng=} scaleOrigin
+   * @return {L.Handler.PathTransform}
+   */
+  transform: function(angle, scale, rotationOrigin, scaleOrigin) {
+    var center     = this._path.getCenter();
+    rotationOrigin = rotationOrigin || center;
+    scaleOrigin    = scaleOrigin    || center;
+    this._transformPoints(this._path, angle, scale, rotationOrigin, scaleOrigin);
+  },
+
+
+  /**
    * Update the polygon and handlers preview, no reprojection
    */
   _update: function() {
@@ -1021,8 +1059,8 @@ L.Handler.PathTransform = L.Handler.extend({
     this._path._transform(null);
     this._rect._transform(null);
 
-    this._transformPoints(this._path, this._matrix, origin);
-    this._transformPoints(this._rect, this._matrix, origin);
+    this._transformPoints(this._path);
+    this._transformPoints(this._rect);
 
     if (this.options.rotation) {
       this._handleLine._transform(null);
@@ -1032,25 +1070,33 @@ L.Handler.PathTransform = L.Handler.extend({
 
 
   /**
-   * @inheritDoc
+   * @param {Number} angle
+   * @param {Number} scale
+   * @param {L.LatLng=} rotationOrigin
+   * @param {L.LatLng=} scaleOrigin
    */
-  _getProjectedMatrix: function(matrix, originPoint) {
+  _getProjectedMatrix: function(angle, scale, rotationOrigin, scaleOrigin) {
     var map    = this._map;
     var zoom   = map.getMaxZoom();
     var matrix = L.matrix(1, 0, 0, 1, 0, 0);
     var origin;
 
-    if (this._angle) {
-      origin = map.project(this._rotationOrigin, zoom);
-      matrix = matrix.rotate(this._angle, origin).flip();
-    }
+    angle = angle || this._angle || 0;
+    scale = scale || this._scale || L.point(1, 1);
 
-    if (!(this._scale.x === 1 && this._scale.y === 1)) {
-      origin = map.project(this._scaleOrigin, zoom);
+    if (!(scale.x === 1 && scale.y === 1)) {
+      scaleOrigin = scaleOrigin || this._scaleOrigin;
+      origin = map.project(scaleOrigin, zoom);
       matrix = matrix
         ._add(L.matrix(1, 0, 0, 1, origin.x, origin.y))
-        ._add(L.matrix(this._scale.x, 0, 0, this._scale.y, 0, 0))
+        ._add(L.matrix(scale.x, 0, 0, scale.y, 0, 0))
         ._add(L.matrix(1, 0, 0, 1, -origin.x, -origin.y));
+    }
+
+    if (angle) {
+      rotationOrigin = rotationOrigin || this._rotationOrigin;
+      origin = map.project(rotationOrigin, zoom);
+      matrix = matrix.rotate(angle, origin).flip();
     }
 
     return matrix;
@@ -1074,15 +1120,19 @@ L.Handler.PathTransform = L.Handler.extend({
    * Applies transformation, does it in one sweep for performance,
    * so don't be surprised about the code repetition.
    *
-   * @param {L.Path}   path
-   * @param {L.Matrix} matrix
+   * @param {L.Path}    path
+   * @param {Number=}   angle
+   * @param {L.Point=}  scale
+   * @param {L.LatLng=} rotationOrigin
+   * @param {L.LatLng=} scaleOrigin
    */
-  _transformPoints: function(path, matrix, origin) {
+  _transformPoints: function(path, angle, scale, rotationOrigin, scaleOrigin) {
     var map = path._map;
     var zoom = map.getMaxZoom();
     var i, len;
 
-    var projectedMatrix = this._projectedMatrix = this._getProjectedMatrix();
+    var projectedMatrix = this._projectedMatrix =
+      this._getProjectedMatrix(angle, scale, rotationOrigin, scaleOrigin);
     // console.time('transform');
 
     // all shifts are in-place
