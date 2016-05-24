@@ -267,7 +267,6 @@ L.Handler.PathTransform = L.Handler.extend({
    * Transform geometries separately
    */
   _transformGeometries: function() {
-    var origin = this._origin;
     this._path._transform(null);
     this._rect._transform(null);
 
@@ -276,7 +275,7 @@ L.Handler.PathTransform = L.Handler.extend({
 
     if (this.options.rotation) {
       this._handleLine._transform(null);
-      this._transformPoints(this._handleLine, this._matrix, origin);
+      this._transformPoints(this._handleLine, this._angle, null, this._origin);
     }
   },
 
