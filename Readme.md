@@ -9,7 +9,7 @@ need to include it once again.
 
 ### Requirements
 
-Leaflet 0.7.3 +
+Leaflet 1.0+
 
 ### API
 ```shell

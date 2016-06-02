@@ -4,6 +4,7 @@
   "description": "Scale/rotate/move plugin for leaflet vector layers ",
   "main": "index.js",
   "scripts": {
+    "prestart": "npm install",
     "test": "tape test/*.js",
     "start": "npm run watch & ./node_modules/.bin/serve -p 3001",
     "watch": "watchify -v -d example/js/app.js -o example/js/bundle.js",
@@ -26,10 +27,10 @@
   "author": "Alexander Milevski <info@w8r.name>",
   "license": "MIT",
   "dependencies": {
-    "leaflet": "^1.0.0-beta.2",
     "leaflet-path-drag": "^1.0.0-beta.3"
   },
   "devDependencies": {
+    "leaflet": "^1.0.0-beta.2",
     "eslint": "^2.4.0",
     "browserify": "^13.0.0",
     "faucet": "0.0.1",

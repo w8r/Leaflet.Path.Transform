@@ -252,8 +252,8 @@ L.Handler.PathTransform = L.Handler.extend({
 
     this._rectShape = this._rect.toGeoJSON();
 
-    handlersGroup.removeLayer(this._handleLine);
-    handlersGroup.removeLayer(this._rotationMarker);
+    this._handlersGroup.removeLayer(this._handleLine);
+    this._handlersGroup.removeLayer(this._rotationMarker);
 
     this._handleLine = this._rotationMarker = null;
 
@@ -542,6 +542,11 @@ L.Handler.PathTransform = L.Handler.extend({
     this._path
       .fire('transformstart', { layer: this._path })
       .fire('scalestart', { layer: this._path, scale: L.point(1, 1) });
+
+    this._map.removeLayer(this._handleLine);
+    this._map.removeLayer(this._rotationMarker);
+
+    //this._handleLine = this._rotationMarker = null;
   },
 
 
@@ -573,6 +578,9 @@ L.Handler.PathTransform = L.Handler.extend({
     this._map
       .off('mousemove', this._onScale,    this)
       .off('mouseup',   this._onScaleEnd, this);
+
+    this._map.addLayer(this._handleLine);
+    this._map.addLayer(this._rotationMarker);
 
     this._apply();
     this._path.fire('scaleend', {
