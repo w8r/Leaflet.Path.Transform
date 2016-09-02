@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "tape test/*.js",
-    "start": "npm run watch & ./node_modules/.bin/serve -p 3001",
+    "start": "npm run watch & npm run server",
+    "server": "http-server -p 3001",
     "watch": "./node_modules/.bin/watchify -v -d example/js/app.js -o example/js/bundle.js",
     "lint": "./node_modules/.bin/eslint ./src/",
     "build-js": "cat ./node_modules/leaflet-path-drag/dist/L.Path.Drag-src.js ./src/Util.js ./src/Matrix.js ./src/Path.Transform.js ./src/MultiPoly.Transform.js > ./dist/L.Path.Transform-src.js",
@@ -26,15 +27,15 @@
   "author": "Alexander Milevski <info@w8r.name>",
   "license": "MIT",
   "dependencies": {
-    "leaflet": "^0.7.7",
-    "leaflet-path-drag": "^0.1.15"
+    "leaflet-path-drag": "^0.1.16"
   },
   "devDependencies": {
-    "eslint": "^2.4.0",
-    "browserify": "^13.0.0",
+    "leaflet": "^0.7.7",
+    "browserify": "^13.1.0",
+    "eslint": "^3.4.0",
     "faucet": "0.0.1",
-    "serve": "^1.4.0",
-    "tape": "^4.5.1",
+    "http-server": "^0.9.0",
+    "tape": "^4.6.0",
     "uglifyjs": "^2.4.10",
     "watchify": "^3.7.0"
   }

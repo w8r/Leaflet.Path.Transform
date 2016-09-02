@@ -233,6 +233,8 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
       .on('mousemove', this._onDrag, this)
       .on('mouseup', this._onDragEnd, this)
     this._dragMoved = false;
+
+    this._replaceCoordGetters();
   },
 
 
@@ -296,6 +298,8 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     this._path._map
       .off('mousemove', this._onDrag, this)
       .off('mouseup', this._onDragEnd, this);
+
+    this._restoreCoordGetters();
 
     // consistency
     this._path.fire('dragend', {
@@ -394,6 +398,44 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     // console.timeEnd('transform');
 
     path._updatePath();
+  },
+
+
+  /**
+   * If you want to read the latlngs during the drag - your right,
+   * but they have to be transformed
+   */
+  _replaceCoordGetters: function() {
+    if (this._path.getLatLng) { // Circle, CircleMarker
+      this._path.getLatLng_ = this._path.getLatLng;
+      this._path.getLatLng = L.Util.bind(function() {
+        return this.dragging._transformPoint(this._latlng, this.dragging._matrix);
+      }, this._path);
+    } else if (this._path.getLatLngs) {
+      this._path.getLatLngs_ = this._path.getLatLngs;
+      this._path.getLatLngs = L.Util.bind(function() {
+        var matrix = this.dragging._matrix;
+        var points = this._latlngs;
+        for (var i = 0, len = points.length; i < len; i++) {
+          points[i] = this.dragging._transformPoint(points[i], matrix);
+        }
+        return points;
+      }, this._path);
+    }
+  },
+
+
+  /**
+   * Put back the getters
+   */
+  _restoreCoordGetters: function() {
+    if (this._path.getLatLng_) {
+      this._path.getLatLng = this._path.getLatLng_;
+      delete this._path.getLatLng_;
+    } else if (this._path.getLatLngs_) {
+      this._path.getLatLngs = this._path.getLatLngs_;
+      delete this._path.getLatLngs_;
+    }
   }
 
 });
@@ -412,39 +454,6 @@ L.Path.addInitHook(function() {
     this.dragging.disable();
   }
 });
-
-/*
- * Return transformed points in case if dragging is enabled and in progress,
- * otherwise - call original method.
- *
- * For L.Circle and L.Polyline
- */
-
-// don't like this? me neither, but I like it even less
-// when the original methods are not exposed
-L.Circle.prototype._getLatLng = L.Circle.prototype.getLatLng;
-L.Circle.prototype.getLatLng = function() {
-  if (this.dragging && this.dragging.inProgress()) {
-    return this.dragging._transformPoint(this._latlng, this.dragging._matrix);
-  } else {
-    return this._getLatLng();
-  }
-};
-
-
-L.Polyline.prototype._getLatLngs = L.Polyline.prototype.getLatLngs;
-L.Polyline.prototype.getLatLngs = function() {
-  if (this.dragging && this.dragging.inProgress()) {
-    var matrix = this.dragging._matrix;
-    var points = this._getLatLngs();
-    for (var i = 0, len = points.length; i < len; i++) {
-      points[i] = this.dragging._transformPoint(points[i], matrix);
-    }
-    return points;
-  } else {
-    return this._getLatLngs();
-  }
-};
 (function() {
 
   // listen and propagate dragstart on sub-layers
