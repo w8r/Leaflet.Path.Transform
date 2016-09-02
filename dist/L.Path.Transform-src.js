@@ -138,12 +138,12 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
 
     L.DomUtil.addClass(this._path._renderer._container, 'leaflet-interactive');
     L.DomEvent
-      .on(document, L.Draggable.MOVE[eventType], this._onDrag, this)
-      .on(document, L.Draggable.END[eventType], this._onDragEnd, this);
+      .on(document, L.Draggable.MOVE[eventType], this._onDrag,    this)
+      .on(document, L.Draggable.END[eventType],  this._onDragEnd, this);
 
     if (this._path._map.dragging.enabled()) {
       // I guess it's required because mousdown gets simulated with a delay
-      this._path._map.dragging._draggable._onUp();
+      //this._path._map.dragging._draggable._onUp(evt);
 
       this._path._map.dragging.disable();
       this._mapDraggingWasEnabled = true;
@@ -196,36 +196,50 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
    * @param  {L.MouseEvent} evt
    */
   _onDragEnd: function(evt) {
-    L.DomEvent.stop(evt);
-    L.DomEvent._fakeStop({ type: 'click' });
-
     var containerPoint = this._path._map.mouseEventToContainerPoint(evt);
+    var moved = this.moved();
 
     // apply matrix
-    if (this.moved()) {
+    if (moved) {
       this._transformPoints(this._matrix);
       this._path._updatePath();
       this._path._project();
       this._path._transform(null);
+
+      L.DomEvent.stop(evt);
     }
+
 
     L.DomEvent
       .off(document, 'mousemove touchmove', this._onDrag, this)
       .off(document, 'mouseup touchend',    this._onDragEnd, this);
 
     this._restoreCoordGetters();
-    // consistency
-    this._path.fire('dragend', {
-      distance: Math.sqrt(
-        L.LineUtil._sqDist(this._dragStartPoint, containerPoint)
-      )
-    });
 
-    this._matrix         = null;
-    this._startPoint     = null;
-    this._dragStartPoint = null;
+    // consistency
+    if (moved) {
+      this._path.fire('dragend', {
+        distance: Math.sqrt(
+          L.LineUtil._sqDist(this._dragStartPoint, containerPoint)
+        )
+      });
+
+      // hack for skipping the click in canvas-rendered layers
+      var contains = this._path._containsPoint;
+      this._path._containsPoint = L.Util.falseFn;
+      L.Util.requestAnimFrame(function() {
+        L.DomEvent._skipped({ type: 'click' });
+        this._path._containsPoint = contains;
+      }, this);
+    }
+
+    this._matrix          = null;
+    this._startPoint      = null;
+    this._dragStartPoint  = null;
+    this._path._dragMoved = false;
 
     if (this._mapDraggingWasEnabled) {
+      L.DomEvent._fakeStop({ type: 'click' });
       this._path._map.dragging.enable();
     }
   },
@@ -461,9 +475,9 @@ L.Canvas.include({
       delete layer._containsPoint_;
 
       this._requestRedraw(layer);
-      this._draw(true);
     }
   },
+
 
   /**
    * Algorithm outline:
@@ -476,7 +490,7 @@ L.Canvas.include({
    *    2.4. draw path
    *    2.5. restore
    *
-   * @param  {L.Path} layer
+   * @param  {L.Path}         layer
    * @param  {Array.<Number>} matrix
    */
   transformPath: function(layer, matrix) {
