@@ -1,6 +1,6 @@
 {
   "name": "leaflet-path-transform",
-  "version": "0.0.7",
+  "version": "0.7.7",
   "description": "Scale/rotate/move plugin for leaflet vector layers ",
   "main": "index.js",
   "scripts": {
