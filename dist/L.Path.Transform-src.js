@@ -803,6 +803,7 @@ L.Handler.PathTransform = L.Handler.extend({
   options: {
     rotation: true,
     scaling:  true,
+    maxZoom:  22,
 
     // edge handlers
     handlerOptions: {
@@ -1090,7 +1091,7 @@ L.Handler.PathTransform = L.Handler.extend({
    */
   _getProjectedMatrix: function(angle, scale, rotationOrigin, scaleOrigin) {
     var map    = this._map;
-    var zoom   = map.getMaxZoom();
+    var zoom   = map.getMaxZoom() || this.options.maxZoom;
     var matrix = L.matrix(1, 0, 0, 1, 0, 0);
     var origin;
 
@@ -1141,7 +1142,7 @@ L.Handler.PathTransform = L.Handler.extend({
    */
   _transformPoints: function(path, angle, scale, rotationOrigin, scaleOrigin) {
     var map = path._map;
-    var zoom = map.getMaxZoom();
+    var zoom = map.getMaxZoom() || this.options.maxZoom;
     var i, len;
 
     var projectedMatrix = this._projectedMatrix =
@@ -1182,7 +1183,7 @@ L.Handler.PathTransform = L.Handler.extend({
     this._handlersGroup = this._handlersGroup ||
                           new L.LayerGroup().addTo(map);
     this._rect = this._rect ||
-                   this._getBoundingPolygon().addTo(this._handlersGroup);
+                 this._getBoundingPolygon().addTo(this._handlersGroup);
 
     if (this.options.scaling) {
       this._handlers = [];
@@ -1409,7 +1410,7 @@ L.Handler.PathTransform = L.Handler.extend({
   _getBoundingPolygon: function() {
     if (this._rectShape) {
       return L.GeoJSON.geometryToLayer(
-        this._rectShape, null, null, this.options.boundsOptions);
+        this._rectShape, this.options.boundsOptions);
     } else {
       return new L.Rectangle(
         this._path.getBounds(), this.options.boundsOptions);
