@@ -239,7 +239,7 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     this._path._dragMoved = false;
 
     if (this._mapDraggingWasEnabled) {
-      L.DomEvent._fakeStop({ type: 'click' });
+      if (moved) L.DomEvent._fakeStop({ type: 'click' });
       this._path._map.dragging.enable();
     }
   },
@@ -438,10 +438,10 @@ L.SVG.include(!L.Browser.vml ? {} : {
 		var w = parseFloat(s.width);
 		var h = parseFloat(s.height);
 
-		if (isNaN(l)) { l = 0; }
-		if (isNaN(t)) { t = 0; }
-		if (isNaN(w) || !w) { w = 1; }
-		if (isNaN(h) || !h) { h = 1; }
+		if (isNaN(l))       l = 0;
+		if (isNaN(t))       t = 0;
+		if (isNaN(w) || !w) w = 1;
+		if (isNaN(h) || !h) h = 1;
 
 		var origin = (-l / w - 0.5).toFixed(8) + ' ' + (-t / h - 0.5).toFixed(8);
 
@@ -464,9 +464,7 @@ L.Canvas.include({
    * @param  {L.Path} layer
    */
   _resetTransformPath: function(layer) {
-    if (!this._containerCopy) {
-      return;
-    }
+    if (!this._containerCopy) return;
 
     delete this._containerCopy;
 
