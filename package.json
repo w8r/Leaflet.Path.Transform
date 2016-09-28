@@ -28,7 +28,7 @@
   "author": "Alexander Milevski <info@w8r.name>",
   "license": "MIT",
   "dependencies": {
-    "leaflet-path-drag": "beta"
+    "leaflet-path-drag": "^1.0.0"
   },
   "devDependencies": {
     "browserify": "^13.1.0",
