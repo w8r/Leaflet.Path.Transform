@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "prestart": "npm install",
-    "test": "tape test/*.js",
+    "test": "browserify --transform [ babelify --presets [ es2015 ] ] ./test/*.test.js | tap-closer | smokestack | tap-status",
+    "test:watch": "nodemon --exec 'npm run test && npm run lint'",
     "start": "npm run watch & npm run server",
     "server": "http-server -p 3001",
     "watch": "watchify -v -d example/js/app.js -o example/js/bundle.js",
@@ -31,11 +32,17 @@
     "leaflet-path-drag": "^1.0.1"
   },
   "devDependencies": {
+    "babel-preset-es2015": "^6.16.0",
+    "babelify": "^7.3.0",
     "browserify": "^13.1.0",
     "eslint": "^3.6.1",
     "faucet": "0.0.1",
     "http-server": "^0.9.0",
     "leaflet": "rc",
+    "nodemon": "^1.10.2",
+    "smokestack": "^3.4.1",
+    "tap-closer": "^1.0.0",
+    "tap-status": "^1.0.1",
     "tape": "^4.6.0",
     "uglifyjs": "^2.4.10",
     "watchify": "^3.7.0"
