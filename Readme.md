@@ -37,6 +37,15 @@ polygon.transform.setOptions({rotation: true, scaling: false});
 * **`options.rotateHandleOptions`** - **<[Polyline_options](http://leafletjs.com/reference.html#polyline-options)>** - rotation handle line styles
 * **`options.handleLength`** - **Number** - Length of the rotation handle in pixels. Defaults to 20.
 
+**Handles**
+
+For the corner and rotation handles plugin provides 2 classes:
+`L.PathTransform.Handle` and `L.PathTransform.RotateHandle`, they are derived from `L.CircleMarker` and you can adjust them as you want. Also you can use some other compatible marker types by providing respective constructors through `options.handleClass` and `options.rotateHandleClass`.
+
+**Cursors:**
+
+Handler assigns `resize` cursors to handles. You can override that by setting `options.handlerOptions.setCursor` and `options.rotateHandleOptions.setCursor` to `false`
+
 
 ### Events
 

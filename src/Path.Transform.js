@@ -1,3 +1,55 @@
+/**
+ * @namespace
+ * @type {Object}
+ */
+L.PathTransform = {};
+
+
+/**
+ * Marker handler
+ * @extends {L.CircleMarker}
+ */
+L.PathTransform.Handle = L.CircleMarker.extend({
+  options: {
+    className: 'leaflet-path-transform-handler'
+  },
+
+  onAdd: function (map) {
+    L.CircleMarker.prototype.onAdd.call(this, map);
+    if (this._path && this.options.setCursor) { // SVG/VML
+      this._path.style.cursor = L.PathTransform.Handle.CursorsByType[
+        this.options.index
+      ];
+    }
+  }
+});
+
+
+/**
+ * @const
+ * @type {Array}
+ */
+L.PathTransform.Handle.CursorsByType = [
+  'nesw-resize', 'nwse-resize', 'nesw-resize', 'nwse-resize'
+];
+
+
+/**
+ * @extends {L.Handler.PathTransform.Handle}
+ */
+L.PathTransform.RotateHandle = L.PathTransform.Handle.extend({
+  options: {
+    className: 'leaflet-path-transform-handler transform-handler--rotate'
+  },
+
+  onAdd: function (map) {
+    L.CircleMarker.prototype.onAdd.call(this, map);
+    if (this._path && this.options.setCursor) { // SVG/VML
+      this._path.style.cursor = 'all-scroll';
+    }
+  }
+});
+
 L.Handler.PathTransform = L.Handler.extend({
 
   options: {
@@ -12,7 +64,8 @@ L.Handler.PathTransform = L.Handler.extend({
       color:       '#202020',
       fillOpacity: 1,
       weight:      2,
-      opacity:     0.7
+      opacity:     0.7,
+      setCursor:   true
     },
 
     // rectangle
@@ -25,14 +78,18 @@ L.Handler.PathTransform = L.Handler.extend({
 
     // rotation handler
     rotateHandleOptions: {
-      weight: 1,
-      opacity: 1
+      weight:    1,
+      opacity:   1,
+      setCursor: true
     },
     // rotation handle length
     handleLength: 20,
 
     // maybe I'll add skewing in the future
-    edgesCount:   4
+    edgesCount:   4,
+
+    handleClass:       L.PathTransform.Handle,
+    rotateHandleClass: L.PathTransform.RotateHandle
   },
 
 
@@ -95,7 +152,7 @@ L.Handler.PathTransform = L.Handler.extend({
     this._createHandlers();
     this._path
       .on('dragstart', this._onDragStart, this)
-      .on('dragend',   this._onDragEnd, this);
+      .on('dragend',   this._onDragEnd,   this);
   },
 
 
@@ -104,6 +161,9 @@ L.Handler.PathTransform = L.Handler.extend({
    */
   removeHooks: function() {
     this._hideHandlers();
+    this._path
+      .off('dragstart', this._onDragStart, this)
+      .off('dragend',   this._onDragEnd,   this);
     this._handlersGroup = null;
     this._rect = null;
     this._handlers = [];
@@ -121,7 +181,7 @@ L.Handler.PathTransform = L.Handler.extend({
     }
 
     this.options = L.Util.merge({},
-      JSON.parse(JSON.stringify(L.Handler.PathTransform.prototype.options)),
+      L.Handler.PathTransform.prototype.options,
       options);
 
     if (enabled) {
@@ -427,7 +487,8 @@ L.Handler.PathTransform = L.Handler.extend({
 
     this._handleLine = new L.Polyline([topPoint, handlerPosition],
       this.options.rotateHandleOptions).addTo(this._handlersGroup);
-    this._rotationMarker = new L.CircleMarker(handlerPosition,
+    var RotateHandleClass = this.options.rotateHandleClass;
+    this._rotationMarker = new RotateHandleClass(handlerPosition,
       this.options.handlerOptions)
       .addTo(this._handlersGroup)
       .on('mousedown', this._onRotateStart, this);
@@ -621,15 +682,18 @@ L.Handler.PathTransform = L.Handler.extend({
   /**
    * Create corner marker
    * @param  {L.LatLng} latlng
-   * @param  {Number}   type one of L.Handler.PathScale.HandlerTypes
+   * @param  {Number}   type one of L.Handler.PathTransform.HandlerTypes
    * @param  {Number}   index
-   * @return {L.CircleMarker}
+   * @return {L.Handler.PathTransform.Handle}
    */
   _createHandler: function(latlng, type, index) {
-    var marker = new L.CircleMarker(latlng,
-      L.Util.extend(this.options.handlerOptions, {
-        type: type,
-        index: index
+    var HandleClass = this.options.handleClass;
+    var marker = new HandleClass(latlng,
+      L.Util.extend({}, this.options.handlerOptions, {
+        className: 'leaflet-drag-transform-marker drag-marker--' +
+                   index + ' drag-marker--' + type,
+        index:     index,
+        type:      type
       })
     );
 
@@ -683,6 +747,7 @@ L.Handler.PathTransform = L.Handler.extend({
     });
   }
 });
+
 
 L.Path.addInitHook(function() {
   if (this.options.transform) {
