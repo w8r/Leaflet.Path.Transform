@@ -36,6 +36,9 @@ polygon.transform.setOptions({rotation: true, scaling: false});
 * **`options.boundsOptions`** - **<[Polyline_options](http://leafletjs.com/reference.html#polyline-options)>** - bounding rectangle options
 * **`options.rotateHandleOptions`** - **<[Polyline_options](http://leafletjs.com/reference.html#polyline-options)>** - rotation handle line styles
 * **`options.handleLength`** - **Number** - Length of the rotation handle in pixels. Defaults to 20.
+* **`options.rotation`** - **Boolean** - Enable/disable rotation. Default `true`
+* **`options.scaling`** - **Boolean** - Enable/disable scaling. Default `true`
+* **`options.uniformScaling`** - **Boolean** - Use uniform scaling (maintain aspect ratio). Default `true`
 
 **Handles**
 
@@ -75,7 +78,7 @@ polygon.dragging.enable();
  - [x] Leaflet 1.x support
  - [x] [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable) adapter
  - [ ] [Leaflet.draw](https://github.com/Leaflet/Leaflet.draw) adapter
- - [ ] Canvas renderer support
+ - [x] Canvas renderer support
 
 ### License
 
