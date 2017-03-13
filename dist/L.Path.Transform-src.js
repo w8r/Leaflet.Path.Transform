@@ -167,28 +167,39 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     var first = (evt.touches && evt.touches.length >= 1 ? evt.touches[0] : evt);
     var containerPoint = this._path._map.mouseEventToContainerPoint(first);
 
+    // skip taps
+    if (evt.type === 'touchmove' && !this._path._dragMoved) {
+      var totalMouseDragDistance = this._dragStartPoint.distanceTo(containerPoint);
+      if (totalMouseDragDistance <= this._path._map.options.tapTolerance) {
+        return;
+      }
+    }
+
     var x = containerPoint.x;
     var y = containerPoint.y;
 
     var dx = x - this._startPoint.x;
     var dy = y - this._startPoint.y;
 
-    if (!this._path._dragMoved && (dx || dy)) {
-      this._path._dragMoved = true;
-      this._path.fire('dragstart', evt);
-      // we don't want that to happen on click
-      this._path.bringToFront();
+    // Send events only if point was moved
+    if (dx || dy) {
+      if (!this._path._dragMoved) {
+        this._path._dragMoved = true;
+        this._path.fire('dragstart', evt);
+        // we don't want that to happen on click
+        this._path.bringToFront();
+      }
+
+      this._matrix[4] += dx;
+      this._matrix[5] += dy;
+
+      this._startPoint.x = x;
+      this._startPoint.y = y;
+
+      this._path.fire('predrag', evt);
+      this._path._transform(this._matrix);
+      this._path.fire('drag', evt);
     }
-
-    this._matrix[4] += dx;
-    this._matrix[5] += dy;
-
-    this._startPoint.x = x;
-    this._startPoint.y = y;
-
-    this._path.fire('predrag', evt);
-    this._path._transform(this._matrix);
-    this._path.fire('drag', evt);
   },
 
   /**
@@ -487,31 +498,35 @@ L.Canvas.include({
    *    2.3. transform
    *    2.4. draw path
    *    2.5. restore
+   * 3. Repeat
    *
    * @param  {L.Path}         layer
    * @param  {Array.<Number>} matrix
    */
   transformPath: function(layer, matrix) {
-    var copy = this._containerCopy;
-    var ctx = this._ctx;
-    var m = L.Browser.retina ? 2 : 1;
+    var copy   = this._containerCopy;
+    var ctx    = this._ctx, copyCtx;
+    var m      = L.Browser.retina ? 2 : 1;
     var bounds = this._bounds;
-    var size = bounds.getSize();
-    var pos = bounds.min;
+    var size   = bounds.getSize();
+    var pos    = bounds.min;
 
-    if (!copy) {
+    if (!copy) { // get copy of all rendered layers
       copy = this._containerCopy = document.createElement('canvas');
-      document.body.appendChild(copy);
+      copyCtx = copy.getContext('2d');
+      // document.body.appendChild(copy);
 
-      copy.width = m * size.x;
+      copy.width  = m * size.x;
       copy.height = m * size.y;
 
-      layer._removed = true;
+      this._removePath(layer);
       this._redraw();
 
-      copy.getContext('2d').translate(m * bounds.min.x, m * bounds.min.y);
-      copy.getContext('2d').drawImage(this._container, 0, 0);
+      copyCtx.translate(m * bounds.min.x, m * bounds.min.y);
+      copyCtx.drawImage(this._container, 0, 0);
       this._initPath(layer);
+
+      // avoid flickering because of the 'mouseover's
       layer._containsPoint_ = layer._containsPoint;
       layer._containsPoint = L.Util.trueFn;
     }
@@ -525,13 +540,11 @@ L.Canvas.include({
     ctx.drawImage(this._containerCopy, 0, 0, size.x, size.y);
     ctx.transform.apply(ctx, matrix);
 
-    var layers = this._layers;
-    this._layers = {};
-
-    this._initPath(layer);
+    // now draw one layer only
+    this._drawing = true;
     layer._updatePath();
+    this._drawing = false;
 
-    this._layers = layers;
     ctx.restore();
   }
 
@@ -855,6 +868,7 @@ L.Handler.PathTransform = L.Handler.extend({
   options: {
     rotation: true,
     scaling:  true,
+    uniformScaling: true,
     maxZoom:  22,
 
     // edge handlers
@@ -914,6 +928,8 @@ L.Handler.PathTransform = L.Handler.extend({
     this._angle            = 0;
     this._scale            = L.point(1, 1);
     this._initialDist      = 0;
+    this._initialDistX     = 0;
+    this._initialDistY     = 0;
     this._rotationStart    = null;
     this._rotationOriginPt = null;
 
@@ -1398,8 +1414,9 @@ L.Handler.PathTransform = L.Handler.extend({
     this._map
       .on('mousemove', this._onScale,    this)
       .on('mouseup',   this._onScaleEnd, this);
-    this._initialDist = this._originMarker._point
-      .distanceTo(this._activeMarker._point);
+    this._initialDist  = this._originMarker._point.distanceTo(this._activeMarker._point);
+    this._initialDistX = this._originMarker._point.x - this._activeMarker._point.x;
+    this._initialDistY = this._originMarker._point.y - this._activeMarker._point.y;
 
     this._path
       .fire('transformstart', { layer: this._path })
@@ -1417,14 +1434,21 @@ L.Handler.PathTransform = L.Handler.extend({
    */
   _onScale: function(evt) {
     var originPoint = this._originMarker._point;
-    var ratio = originPoint.distanceTo(evt.layerPoint) / this._initialDist;
+    var ratioX, ratioY;
+    if (this.options.uniformScaling) {
+      ratioX = originPoint.distanceTo(evt.layerPoint) / this._initialDist;
+      ratioY = ratioX;
+    } else {
+      ratioX = (originPoint.x - evt.layerPoint.x) / this._initialDistX;
+      ratioY = (originPoint.y - evt.layerPoint.y) / this._initialDistY;
+    }
 
-    this._scale = new L.Point(ratio, ratio);
+    this._scale = new L.Point(ratioX, ratioY);
 
     // update matrix
     this._matrix = this._initialMatrix
       .clone()
-      .scale(ratio, originPoint);
+      .scale(this._scale, originPoint);
 
     this._update();
     this._path.fire('scale', {
