@@ -217,6 +217,7 @@ function update() {
     var dragging = document.querySelector('#dragging').checked;
     var scaling = document.querySelector('#scaling').checked;
     var rotation = document.querySelector('#rotation').checked;
+    var uniform  = document.querySelector('#uniform').checked;
 
     layers.forEach(function(layer) {
 
@@ -231,7 +232,8 @@ function update() {
 
       layer.transform.setOptions({
         scaling: scaling,
-        rotation: rotation
+        rotation: rotation,
+        uniformScaling: uniform
       }).enable();
     });
   });

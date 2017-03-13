@@ -3,6 +3,7 @@ L.Handler.PathTransform = L.Handler.extend({
   options: {
     rotation: true,
     scaling:  true,
+    uniformScaling: true,
 
     // edge handlers
     handlerOptions: {
@@ -54,6 +55,8 @@ L.Handler.PathTransform = L.Handler.extend({
     this._angle            = 0;
     this._scale            = L.point(1, 1);
     this._initialDist      = 0;
+    this._initialDistX     = 0;
+    this._initialDistY     = 0;
     this._rotationStart    = null;
     this._rotationOriginPt = null;
 
@@ -487,8 +490,9 @@ L.Handler.PathTransform = L.Handler.extend({
     this._map
       .on('mousemove', this._onScale,    this)
       .on('mouseup',   this._onScaleEnd, this);
-    this._initialDist = this._originMarker._point
-      .distanceTo(this._activeMarker._point);
+    this._initialDist  = this._originMarker._point.distanceTo(this._activeMarker._point);
+    this._initialDistX = this._originMarker._point.x - this._activeMarker._point.x;
+    this._initialDistY = this._originMarker._point.y - this._activeMarker._point.y;
 
     this._path
       .fire('transformstart', { layer: this._path })
@@ -501,14 +505,21 @@ L.Handler.PathTransform = L.Handler.extend({
    */
   _onScale: function(evt) {
     var originPoint = this._originMarker._point;
-    var ratio = originPoint.distanceTo(evt.layerPoint) / this._initialDist;
+    var ratioX, ratioY;
+    if (this.options.uniformScaling) {
+      ratioX = originPoint.distanceTo(evt.layerPoint) / this._initialDist;
+      ratioY = ratioX;
+    } else {
+      ratioX = (originPoint.x - evt.layerPoint.x) / this._initialDistX;
+      ratioY = (originPoint.y - evt.layerPoint.y) / this._initialDistY;
+    }
 
-    this._scale = new L.Point(ratio, ratio);
+    this._scale = new L.Point(ratioX, ratioY);
 
     // update matrix
     this._matrix = this._initialMatrix
       .clone()
-      .scale(ratio, originPoint);
+      .scale(this._scale, originPoint);
 
     this._update();
     this._path.fire('scale', {
