@@ -317,8 +317,13 @@ L.Handler.PathTransform = L.Handler.extend({
 
     this._rectShape = this._rect.toGeoJSON();
 
-    this._handlersGroup.removeLayer(this._handleLine);
-    this._handlersGroup.removeLayer(this._rotationMarker);
+    if (this._handleLine) {
+      this._handlersGroup.removeLayer(this._handleLine);
+    }
+
+    if (this._rotationMarker) {
+      this._handlersGroup.removeLayer(this._rotationMarker);        
+    }      
 
     this._handleLine = this._rotationMarker = null;
 
