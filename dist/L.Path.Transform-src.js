@@ -43,6 +43,25 @@ L.Path.include({
 	}
 
 });
+var END = {
+  mousedown:     'mouseup',
+  touchstart:    'touchend',
+  pointerdown:   'touchend',
+  MSPointerDown: 'touchend'
+};
+
+var MOVE = {
+  mousedown:     'mousemove',
+  touchstart:    'touchmove',
+  pointerdown:   'touchmove',
+  MSPointerDown: 'touchmove'
+};
+
+function distance(a, b) {
+  var dx = a.x - b.x, dy = a.y - b.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
 /**
  * Drag handler
  * @class L.Path.Drag
@@ -138,8 +157,8 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
 
     L.DomUtil.addClass(this._path._renderer._container, 'leaflet-interactive');
     L.DomEvent
-      .on(document, L.Draggable.MOVE[eventType], this._onDrag,    this)
-      .on(document, L.Draggable.END[eventType],  this._onDragEnd, this);
+      .on(document, MOVE[eventType], this._onDrag,    this)
+      .on(document, END[eventType],  this._onDragEnd, this);
 
     if (this._path._map.dragging.enabled()) {
       // I guess it's required because mousdown gets simulated with a delay
@@ -221,25 +240,22 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     }
 
 
-    L.DomEvent
-      .off(document, 'mousemove touchmove', this._onDrag, this)
-      .off(document, 'mouseup touchend',    this._onDragEnd, this);
+    L.DomEvent.off(document, 'mousemove touchmove', this._onDrag,    this);
+    L.DomEvent.off(document, 'mouseup touchend',    this._onDragEnd, this);
 
     this._restoreCoordGetters();
 
     // consistency
     if (moved) {
       this._path.fire('dragend', {
-        distance: Math.sqrt(
-          L.LineUtil._sqDist(this._dragStartPoint, containerPoint)
-        )
+        distance: distance(this._dragStartPoint, containerPoint)
       });
 
       // hack for skipping the click in canvas-rendered layers
       var contains = this._path._containsPoint;
       this._path._containsPoint = L.Util.falseFn;
       L.Util.requestAnimFrame(function() {
-        L.DomEvent._skipped({ type: 'click' });
+        L.DomEvent.skipped({ type: 'click' });
         this._path._containsPoint = contains;
       }, this);
     }
@@ -250,7 +266,7 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     this._path._dragMoved = false;
 
     if (this._mapDraggingWasEnabled) {
-      if (moved) L.DomEvent._fakeStop({ type: 'click' });
+      if (moved) L.DomEvent.fakeStop({ type: 'click' });
       this._path._map.dragging.enable();
     }
   },
@@ -464,9 +480,7 @@ L.SVG.include(!L.Browser.vml ? {} : {
 	}
 
 });
-L.Util.trueFn = function() {
-  return true;
-};
+function TRUE_FN () { return true; }
 
 L.Canvas.include({
 
@@ -528,7 +542,7 @@ L.Canvas.include({
 
       // avoid flickering because of the 'mouseover's
       layer._containsPoint_ = layer._containsPoint;
-      layer._containsPoint = L.Util.trueFn;
+      layer._containsPoint  = TRUE_FN;
     }
 
     ctx.save();
@@ -557,6 +571,12 @@ L.Canvas.include({
  * @preserve
  */
 /**
+ * @namespace
+ * @type {Object}
+ */
+L.PathTransform = {};
+
+/**
  * Point on the line segment or its extention
  *
  * @param  {L.Point} start
@@ -564,7 +584,7 @@ L.Canvas.include({
  * @param  {Number}  distPx
  * @return {L.Point}
  */
-L.LineUtil.pointOnLine = function(start, final, distPx) {
+L.PathTransform.pointOnLine = function(start, final, distPx) {
   var ratio = 1 + distPx / start.distanceTo(final);
   return new L.Point(
     start.x + (final.x - start.x) * ratio,
@@ -576,7 +596,7 @@ L.LineUtil.pointOnLine = function(start, final, distPx) {
 /**
  * Deep merge objects.
  */
-L.Util.merge = function() {
+L.PathTransform.merge = function() {
   var i = 1;
   var key, val;
   var obj = arguments[i];
@@ -811,11 +831,6 @@ L.Matrix.prototype = {
 L.matrix = function(a, b, c, d, e, f) {
   return new L.Matrix(a, b, c, d, e, f);
 };
-/**
- * @namespace
- * @type {Object}
- */
-L.PathTransform = {};
 
 
 /**
@@ -996,7 +1011,7 @@ L.Handler.PathTransform = L.Handler.extend({
       this.disable();
     }
 
-    this.options = L.Util.merge({},
+    this.options = L.PathTransform.merge({},
       L.Handler.PathTransform.prototype.options,
       options);
 
@@ -1129,8 +1144,13 @@ L.Handler.PathTransform = L.Handler.extend({
 
     this._rectShape = this._rect.toGeoJSON();
 
-    this._handlersGroup.removeLayer(this._handleLine);
-    this._handlersGroup.removeLayer(this._rotationMarker);
+    if (this._handleLine) {
+      this._handlersGroup.removeLayer(this._handleLine);
+    }
+
+    if (this._rotationMarker) {
+      this._handlersGroup.removeLayer(this._rotationMarker);
+    }
 
     this._handleLine = this._rotationMarker = null;
 
@@ -1295,7 +1315,7 @@ L.Handler.PathTransform = L.Handler.extend({
       (latlngs[1].lng + latlngs[2].lng) / 2);
 
     var handlerPosition = map.layerPointToLatLng(
-      L.LineUtil.pointOnLine(
+      L.PathTransform.pointOnLine(
         map.latLngToLayerPoint(bottom),
         map.latLngToLayerPoint(topPoint),
         this.options.handleLength)

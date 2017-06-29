@@ -86,6 +86,16 @@ var polyline = global.polyline = new L.Polyline(
   .addTo(map);
 // polyline.transform.enable();
 
+var rectangle = global.rectangle = new L.Rectangle(L.latLngBounds([
+  [22.334833457530486, 114.0154266357422],
+  [22.244615500323064, 114.14108276367189]
+]), {
+    weight: 2,
+    draggable: true,
+    transform: true
+  })
+  .bindPopup("L.Rectangle")
+  .addTo(map);
 
 var polygonWithHole = global.polygonWithHole = new L.Polygon(
     [
@@ -211,7 +221,7 @@ var multiPolyline = global.multiPolyline = new L.Polyline([
 }).bindPopup('MultiPolyline').addTo(map);
 // multiPolyline.transform.enable();
 
-var layers = [polygon, polyline, multiPolyline, multiPolygon, polygonWithHole];
+var layers = [polygon, polyline, rectangle, multiPolyline, multiPolygon, polygonWithHole];
 
 function update() {
   L.Util.requestAnimFrame(function() {
