@@ -74,7 +74,7 @@ L.Matrix.prototype = {
 
   /**
    * @param {L.Point=|Number=} translate
-   * @return {L.Matrix|L.Point}
+   * @return {L.Matrix}
    */
   translate: function(translate) {
     if (translate === undefined) {
