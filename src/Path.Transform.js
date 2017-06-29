@@ -1,8 +1,3 @@
-/**
- * @namespace
- * @type {Object}
- */
-L.PathTransform = {};
 
 
 /**
@@ -184,7 +179,7 @@ L.Handler.PathTransform = L.Handler.extend({
       this.disable();
     }
 
-    this.options = L.Util.merge({},
+    this.options = L.PathTransform.merge({},
       L.Handler.PathTransform.prototype.options,
       options);
 
@@ -322,8 +317,8 @@ L.Handler.PathTransform = L.Handler.extend({
     }
 
     if (this._rotationMarker) {
-      this._handlersGroup.removeLayer(this._rotationMarker);        
-    }      
+      this._handlersGroup.removeLayer(this._rotationMarker);
+    }
 
     this._handleLine = this._rotationMarker = null;
 
@@ -490,7 +485,7 @@ L.Handler.PathTransform = L.Handler.extend({
       (latlngs[1].lng + latlngs[2].lng) / 2);
 
     var handlerPosition = map.layerPointToLatLng(
-      L.LineUtil.pointOnLine(
+      L.PathTransform.pointOnLine(
         map.latLngToLayerPoint(bottom),
         map.latLngToLayerPoint(topPoint),
         this.options.handleLength)

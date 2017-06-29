@@ -1,4 +1,10 @@
 /**
+ * @namespace
+ * @type {Object}
+ */
+L.PathTransform = {};
+
+/**
  * Point on the line segment or its extention
  *
  * @param  {L.Point} start
@@ -6,7 +12,7 @@
  * @param  {Number}  distPx
  * @return {L.Point}
  */
-L.LineUtil.pointOnLine = function(start, final, distPx) {
+L.PathTransform.pointOnLine = function(start, final, distPx) {
   var ratio = 1 + distPx / start.distanceTo(final);
   return new L.Point(
     start.x + (final.x - start.x) * ratio,
@@ -18,7 +24,7 @@ L.LineUtil.pointOnLine = function(start, final, distPx) {
 /**
  * Deep merge objects.
  */
-L.Util.merge = function() {
+L.PathTransform.merge = function() {
   var i = 1;
   var key, val;
   var obj = arguments[i];
