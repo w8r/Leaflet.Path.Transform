@@ -226,6 +226,9 @@ L.Handler.PathTransform = L.Handler.extend({
     scaleOrigin    = scaleOrigin    || center;
     this._map = this._path._map;
     this._transformPoints(this._path, angle, scale, rotationOrigin, scaleOrigin);
+    this._transformPoints(this._rect, angle, scale, rotationOrigin, scaleOrigin);
+    this._transformPoints(this._handleLine, angle, scale, rotationOrigin, scaleOrigin);
+    this._updateHandlers();
     return this;
   },
 
@@ -576,8 +579,9 @@ L.Handler.PathTransform = L.Handler.extend({
       .off('mousemove', this._onRotate, this)
       .off('mouseup',   this._onRotateEnd, this);
 
+    var angle = this._angle;
     this._apply();
-    this._path.fire('rotateend', { layer: this._path, rotation: this._angle });
+    this._path.fire('rotateend', { layer: this._path, rotation: angle });
   },
 
 
