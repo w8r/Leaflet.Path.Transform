@@ -304,6 +304,21 @@ L.Handler.PathTransform = L.Handler.extend({
 
 
   /**
+   * Use this method to completely reset handlers, if you have changed the
+   * geometry of transformed layer
+   */
+  reset: function() {
+    if (this._enabled) {
+      if (this._rect) {
+        this._handlersGroup.removeLayer(this._rect);
+        this._rect = this._getBoundingPolygon().addTo(this._handlersGroup);
+      }
+      this._updateHandlers();
+    }
+  },
+
+
+  /**
    * Recalculate rotation handlers position
    */
   _updateHandlers: function() {

@@ -30,6 +30,15 @@ polygon.transform.enable({rotation: true, scaling: false});
 polygon.transform.setOptions({rotation: true, scaling: false});
 ```
 
+If you have changed the geometry of the transformed layer and want the tool to reflect the changes, use:
+
+```js
+// you have changed the geometry here
+layer.setLatLngs([...]);
+// and want to update handlers:
+layer.transform.reset();
+```
+
 ### `options`
 
 * **`options.handlerOptions`** - **<[Path_options](http://leafletjs.com/reference.html#path-options)>** - edge markers options
