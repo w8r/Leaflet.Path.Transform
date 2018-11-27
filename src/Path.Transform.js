@@ -228,6 +228,9 @@ L.Handler.PathTransform = L.Handler.extend({
     scaleOrigin    = scaleOrigin    || center;
     this._map = this._path._map;
     this._transformPoints(this._path, angle, scale, rotationOrigin, scaleOrigin);
+    this._transformPoints(this._rect, angle, scale, rotationOrigin, scaleOrigin);
+    this._transformPoints(this._handleLine, angle, scale, rotationOrigin, scaleOrigin);
+    this._updateHandlers();
     return this;
   },
 
