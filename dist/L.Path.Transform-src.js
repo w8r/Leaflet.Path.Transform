@@ -1467,8 +1467,9 @@ L.Handler.PathTransform = L.Handler.extend({
       .off('mousemove', this._onRotate, this)
       .off('mouseup',   this._onRotateEnd, this);
 
+    var angle = this._angle;
     this._apply();
-    this._path.fire('rotateend', { layer: this._path, rotation: this._angle });
+    this._path.fire('rotateend', { layer: this._path, rotation: angle });
   },
 
 
