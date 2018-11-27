@@ -902,7 +902,8 @@ L.Handler.PathTransform = L.Handler.extend({
       weight:    1,
       opacity:   1,
       dashArray: [3, 3],
-      fill:      false
+      fill:      false,
+      noClip:    true
     },
 
     // rotation handler
