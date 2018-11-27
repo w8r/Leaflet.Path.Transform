@@ -52,6 +52,7 @@ L.Handler.PathTransform = L.Handler.extend({
     scaling:  true,
     uniformScaling: true,
     maxZoom:  22,
+    showRect: true,
 
     // edge handlers
     handlerOptions: {
@@ -314,8 +315,10 @@ L.Handler.PathTransform = L.Handler.extend({
   reset: function() {
     if (this._enabled) {
       if (this._rect) {
-        this._handlersGroup.removeLayer(this._rect);
-        this._rect = this._getBoundingPolygon().addTo(this._handlersGroup);
+        if (this.options.showRect) {
+          this._handlersGroup.removeLayer(this._rect);
+          this._rect = this._getBoundingPolygon().addTo(this._handlersGroup);
+        }
       }
       this._updateHandlers();
     }
@@ -356,7 +359,9 @@ L.Handler.PathTransform = L.Handler.extend({
     this._rect._transform(null);
 
     this._transformPoints(this._path);
-    this._transformPoints(this._rect);
+    if (this.options.showRect) {
+      this._transformPoints(this._rect);
+    }
 
     if (this.options.rotation) {
       this._handleLine._transform(null);
@@ -464,8 +469,12 @@ L.Handler.PathTransform = L.Handler.extend({
     var map = this._map;
     this._handlersGroup = this._handlersGroup ||
                           new L.LayerGroup().addTo(map);
-    this._rect = this._rect ||
-                 this._getBoundingPolygon().addTo(this._handlersGroup);
+    if (this.options.showRect) {
+      this._rect = this._rect ||
+                 this._getBoundingPolygon().addTo(this._handlersGroup); 
+    } else {
+      this._rect = this._path;
+    }
 
     if (this.options.scaling) {
       this._handlers = [];
