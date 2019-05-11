@@ -435,6 +435,9 @@ L.Handler.PathTransform = L.Handler.extend({
     if (path._point) { // L.Circle
       path._latlng = this._transformPoint(
         path._latlng, projectedMatrix, map, zoom);
+      var box = this._getBoundingPolygon();
+      var radius = Math.abs(path._latlng.lat - box._bounds._northEast.lat);
+      path.setRadius(radius);
     } else if (path._rings || path._parts) { // everything else
       var rings = path._rings;
       var latlngs = path._latlngs;
