@@ -315,7 +315,7 @@ L.Handler.PathTransform = L.Handler.extend({
     if (this._enabled) {
       if (this._rect) {
         this._handlersGroup.removeLayer(this._rect);
-        this._rect = this._getBoundingPolygon().addTo(this._handlersGroup);
+//         this._rect = this._getBoundingPolygon().addTo(this._handlersGroup);
       }
       this._updateHandlers();
     }
