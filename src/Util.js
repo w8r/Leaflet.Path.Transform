@@ -47,7 +47,7 @@ L.PathTransform.merge = function() {
       val = obj[key];
 
       if (isObject(val) && isObject(target[key])){
-        target[key] = L.Util.merge(target[key], val);
+        target[key] = L.PathTransform.merge(target[key], val);
       } else {
         target[key] = val;
       }
