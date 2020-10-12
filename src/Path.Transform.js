@@ -125,6 +125,7 @@ L.Handler.PathTransform = L.Handler.extend({
     this._rect           = null;
     this._handlers       = [];
     this._handleLine     = null;
+     this._rectShape = null;
   },
 
 
@@ -166,6 +167,7 @@ L.Handler.PathTransform = L.Handler.extend({
     this._handlersGroup = null;
     this._rect = null;
     this._handlers = [];
+     this._rectShape = null;
   },
 
 
