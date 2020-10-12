@@ -315,8 +315,8 @@ L.Handler.PathTransform = L.Handler.extend({
     if (this._enabled) {
       if (this._rect) {
         this._handlersGroup.removeLayer(this._rect);
-        this._rect = this._getBoundingPolygon().addTo(this._handlersGroup);
       }
+      this._rect = this._getBoundingPolygon().addTo(this._handlersGroup);
       this._updateHandlers();
     }
   },
@@ -439,15 +439,14 @@ L.Handler.PathTransform = L.Handler.extend({
       var radius = Math.floor(Math.abs(box._bounds._southWest.lat - box._bounds._northEast.lat) / 2);
       path.setRadius(radius);
     } else if (path._rings || path._parts) { // everything else
-      var rings = path._rings;
       var latlngs = path._latlngs;
       path._bounds = new L.LatLngBounds();
 
       if (!L.Util.isArray(latlngs[0])) { // polyline
         latlngs = [latlngs];
       }
-      for (i = 0, len = rings.length; i < len; i++) {
-        for (var j = 0, jj = rings[i].length; j < jj; j++) {
+      for (i = 0, len = latlngs.length; i < len; i++) {
+        for (var j = 0, jj = latlngs[i].length; j < jj; j++) {
           latlngs[i][j] = this._transformPoint(
             latlngs[i][j], projectedMatrix, map, zoom);
           path._bounds.extend(latlngs[i][j]);
