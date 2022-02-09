@@ -516,7 +516,8 @@ L.Handler.PathTransform = L.Handler.extend({
     this._rotationMarker = new RotateHandleClass(handlerPosition,
       this.options.handlerOptions)
       .addTo(this._handlersGroup)
-      .on('mousedown', this._onRotateStart, this);
+      .on('mousedown', this._onRotateStart, this)
+      .on('touchstart', this._onRotateStart, this);
 
     this._rotationOrigin = new L.LatLng(
       (topPoint.lat + bottom.lat) / 2,
@@ -559,7 +560,9 @@ L.Handler.PathTransform = L.Handler.extend({
     this._angle = 0;
     this._path._map
       .on('mousemove', this._onRotate,     this)
-      .on('mouseup',   this._onRotateEnd, this);
+      .on('mouseup',   this._onRotateEnd, this)
+      .on('touchmove', this._onRotate,     this)
+      .on('touchend',   this._onRotateEnd, this);
 
     this._cachePoints();
     this._path
@@ -596,7 +599,9 @@ L.Handler.PathTransform = L.Handler.extend({
   _onRotateEnd: function(evt) {
     this._path._map
       .off('mousemove', this._onRotate, this)
-      .off('mouseup',   this._onRotateEnd, this);
+      .off('mouseup',   this._onRotateEnd, this)
+      .off('touchmove', this._onRotate, this)
+      .off('touchend',   this._onRotateEnd, this);
 
     var angle = this._angle;
     this._apply();
@@ -623,7 +628,9 @@ L.Handler.PathTransform = L.Handler.extend({
 
     this._map
       .on('mousemove', this._onScale,    this)
-      .on('mouseup',   this._onScaleEnd, this);
+      .on('mouseup',   this._onScaleEnd, this)
+      .on('touchmove', this._onScale,    this)
+      .on('touchend',   this._onScaleEnd, this);
     this._initialDist  = this._originMarker._point.distanceTo(this._activeMarker._point);
     this._initialDistX = this._originMarker._point.x - this._activeMarker._point.x;
     this._initialDistY = this._originMarker._point.y - this._activeMarker._point.y;
@@ -677,7 +684,9 @@ L.Handler.PathTransform = L.Handler.extend({
   _onScaleEnd: function(evt) {
     this._map
       .off('mousemove', this._onScale,    this)
-      .off('mouseup',   this._onScaleEnd, this);
+      .off('mouseup',   this._onScaleEnd, this)
+      .off('touchmove', this._onScale,    this)
+      .off('touchend',   this._onScaleEnd, this);
 
     if (this._handleLine) {
       this._map.addLayer(this._handleLine);
@@ -739,7 +748,8 @@ L.Handler.PathTransform = L.Handler.extend({
       })
     );
 
-    marker.on('mousedown', this._onScaleStart, this);
+    marker.on('mousedown', this._onScaleStart, this)
+      .on('touchstart', this._onScaleStart, this);
     return marker;
   },
 
