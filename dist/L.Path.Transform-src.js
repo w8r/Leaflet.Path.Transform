@@ -226,6 +226,7 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
    * @param  {L.MouseEvent} evt
    */
   _onDragEnd: function(evt) {
+    let el = (evt.target || evt.srcElement);
     var containerPoint = this._path._map.mouseEventToContainerPoint(evt);
     var moved = this.moved();
 
@@ -255,7 +256,7 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
       var contains = this._path._containsPoint;
       this._path._containsPoint = L.Util.falseFn;
       L.Util.requestAnimFrame(function() {
-        L.DomEvent.skipped({ type: 'click' });
+        el['_leaflet_disable_click'] = false;
         this._path._containsPoint = contains;
       }, this);
     }
@@ -266,7 +267,7 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     this._path._dragMoved = false;
 
     if (this._mapDraggingWasEnabled) {
-      if (moved) L.DomEvent.fakeStop({ type: 'click' });
+      if (moved) el['_leaflet_disable_click'] = false;
       this._path._map.dragging.enable();
     }
   },
