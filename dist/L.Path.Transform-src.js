@@ -267,7 +267,7 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
     this._path._dragMoved = false;
 
     if (this._mapDraggingWasEnabled) {
-      if (moved) el['_leaflet_disable_click'] = false;
+      if (moved) el['_leaflet_disable_click'] = true;
       this._path._map.dragging.enable();
     }
   },
