@@ -616,7 +616,7 @@ L.PathTransform = {};
  * @param  {Number}  distPx
  * @return {L.Point}
  */
-L.PathTransform.pointOnLine = function(start, final, distPx) {
+L.PathTransform.pointOnLine = function (start, final, distPx) {
   var ratio = 1 + distPx / start.distanceTo(final);
   return new L.Point(
     start.x + (final.x - start.x) * ratio,
@@ -624,11 +624,10 @@ L.PathTransform.pointOnLine = function(start, final, distPx) {
   );
 };
 
-
 /**
  * Deep merge objects.
  */
-L.PathTransform.merge = function() {
+L.PathTransform.merge = function () {
   var i = 1;
   var key, val;
   var obj = arguments[i];
@@ -650,7 +649,7 @@ L.PathTransform.merge = function() {
 
       val = obj[key];
 
-      if (isObject(val) && isObject(target[key])){
+      if (isObject(val) && isObject(target[key])) {
         target[key] = L.PathTransform.merge(target[key], val);
       } else {
         target[key] = val;
@@ -669,26 +668,21 @@ L.PathTransform.merge = function() {
  * @param {Number} e
  * @param {Number} f
  */
-L.Matrix = function(a, b, c, d, e, f) {
-
+L.Matrix = function (a, b, c, d, e, f) {
   /**
    * @type {Array.<Number>}
    */
   this._matrix = [a, b, c, d, e, f];
 };
 
-
 L.Matrix.prototype = {
-
-
   /**
    * @param  {L.Point} point
    * @return {L.Point}
    */
-  transform: function(point) {
+  transform: function (point) {
     return this._transform(point.clone());
   },
-
 
   /**
    * Destructive
@@ -699,14 +693,14 @@ L.Matrix.prototype = {
    * @param  {L.Point} point
    * @return {L.Point}
    */
-  _transform: function(point) {
+  _transform: function (point) {
     var matrix = this._matrix;
-    var x = point.x, y = point.y;
+    var x = point.x,
+      y = point.y;
     point.x = matrix[0] * x + matrix[1] * y + matrix[4];
     point.y = matrix[2] * x + matrix[3] * y + matrix[5];
     return point;
   },
-
 
   /**
    * @param  {L.Point} point
@@ -720,24 +714,26 @@ L.Matrix.prototype = {
     );
   },
 
-
   /**
    * @return {L.Matrix}
    */
-  clone: function() {
+  clone: function () {
     var matrix = this._matrix;
     return new L.Matrix(
-      matrix[0], matrix[1], matrix[2],
-      matrix[3], matrix[4], matrix[5]
+      matrix[0],
+      matrix[1],
+      matrix[2],
+      matrix[3],
+      matrix[4],
+      matrix[5]
     );
   },
-
 
   /**
    * @param {L.Point=|Number=} translate
    * @return {L.Matrix|L.Point}
    */
-  translate: function(translate) {
+  translate: function (translate) {
     if (translate === undefined) {
       return new L.Point(this._matrix[4], this._matrix[5]);
     }
@@ -753,12 +749,11 @@ L.Matrix.prototype = {
     return this._add(1, 0, 0, 1, translateX, translateY);
   },
 
-
   /**
    * @param {L.Point=|Number=} scale
    * @return {L.Matrix|L.Point}
    */
-  scale: function(scale, origin) {
+  scale: function (scale, origin) {
     if (scale === undefined) {
       return new L.Point(this._matrix[0], this._matrix[3]);
     }
@@ -772,11 +767,15 @@ L.Matrix.prototype = {
       scaleY = scale.y;
     }
 
-    return this
-      ._add(scaleX, 0, 0, scaleY, origin.x, origin.y)
-      ._add(1, 0, 0, 1, -origin.x, -origin.y);
+    return this._add(scaleX, 0, 0, scaleY, origin.x, origin.y)._add(
+      1,
+      0,
+      0,
+      1,
+      -origin.x,
+      -origin.y
+    );
   },
-
 
   /**
    * m00  m01  x - m00 * x - m01 * y
@@ -785,28 +784,31 @@ L.Matrix.prototype = {
    * @param {L.Point=} origin
    * @return {L.Matrix}
    */
-  rotate: function(angle, origin) {
+  rotate: function (angle, origin) {
     var cos = Math.cos(angle);
     var sin = Math.sin(angle);
 
     origin = origin || new L.Point(0, 0);
 
-    return this
-      ._add(cos, sin, -sin, cos, origin.x, origin.y)
-      ._add(1, 0, 0, 1, -origin.x, -origin.y);
+    return this._add(cos, sin, -sin, cos, origin.x, origin.y)._add(
+      1,
+      0,
+      0,
+      1,
+      -origin.x,
+      -origin.y
+    );
   },
-
 
   /**
    * Invert rotation
    * @return {L.Matrix}
    */
-  flip: function() {
+  flip: function () {
     this._matrix[1] *= -1;
     this._matrix[2] *= -1;
     return this;
   },
-
 
   /**
    * @param {Number|L.Matrix} a
@@ -816,27 +818,28 @@ L.Matrix.prototype = {
    * @param {Number} e
    * @param {Number} f
    */
-  _add: function(a, b, c, d, e, f) {
+  _add: function (a, b, c, d, e, f) {
     var result = [[], [], []];
     var src = this._matrix;
     var m = [
       [src[0], src[2], src[4]],
       [src[1], src[3], src[5]],
-      [     0,      0,     1]
+      [0, 0, 1],
     ];
     var other = [
-      [a, c, e],
-      [b, d, f],
-      [0, 0, 1]
-    ], val;
-
+        [a, c, e],
+        [b, d, f],
+        [0, 0, 1],
+      ],
+      val;
 
     if (a && a instanceof L.Matrix) {
       src = a._matrix;
       other = [
         [src[0], src[2], src[4]],
         [src[1], src[3], src[5]],
-        [     0,      0,     1]];
+        [0, 0, 1],
+      ];
     }
 
     for (var i = 0; i < 3; i++) {
@@ -850,156 +853,154 @@ L.Matrix.prototype = {
     }
 
     this._matrix = [
-      result[0][0], result[1][0], result[0][1],
-      result[1][1], result[0][2], result[1][2]
+      result[0][0],
+      result[1][0],
+      result[0][1],
+      result[1][1],
+      result[0][2],
+      result[1][2],
     ];
     return this;
-  }
-
-
+  },
 };
 
-
-L.matrix = function(a, b, c, d, e, f) {
+L.matrix = function (a, b, c, d, e, f) {
   return new L.Matrix(a, b, c, d, e, f);
 };
-
-
 /**
  * Marker handler
  * @extends {L.CircleMarker}
  */
 L.PathTransform.Handle = L.CircleMarker.extend({
   options: {
-    className: 'leaflet-path-transform-handler'
+    className: 'leaflet-path-transform-handler',
   },
 
   onAdd: function (map) {
     L.CircleMarker.prototype.onAdd.call(this, map);
-    if (this._path && this.options.setCursor) { // SVG/VML
-      this._path.style.cursor = L.PathTransform.Handle.CursorsByType[
-        this.options.index
-      ];
+    if (this._path && this.options.setCursor) {
+      // SVG/VML
+      this._path.style.cursor =
+        L.PathTransform.Handle.CursorsByType[this.options.index];
     }
-  }
+  },
 });
-
 
 /**
  * @const
  * @type {Array}
  */
 L.PathTransform.Handle.CursorsByType = [
-  'nesw-resize', 'nwse-resize', 'nesw-resize', 'nwse-resize'
+  'nesw-resize',
+  'nwse-resize',
+  'nesw-resize',
+  'nwse-resize',
 ];
-
 
 /**
  * @extends {L.Handler.PathTransform.Handle}
  */
 L.PathTransform.RotateHandle = L.PathTransform.Handle.extend({
   options: {
-    className: 'leaflet-path-transform-handler transform-handler--rotate'
+    className: 'leaflet-path-transform-handler transform-handler--rotate',
   },
 
   onAdd: function (map) {
     L.CircleMarker.prototype.onAdd.call(this, map);
-    if (this._path && this.options.setCursor) { // SVG/VML
+    if (this._path && this.options.setCursor) {
+      // SVG/VML
       this._path.style.cursor = 'all-scroll';
     }
-  }
+  },
 });
 
 L.Handler.PathTransform = L.Handler.extend({
-
   options: {
     rotation: true,
     rotationAnchor: null,
-    scaling:  true,
+    scaling: true,
     uniformScaling: true,
-    maxZoom:  22,
+    maxZoom: 22,
 
     // edge handlers
     handlerOptions: {
-      radius:      5,
-      fillColor:   '#ffffff',
-      color:       '#202020',
+      radius: 5,
+      fillColor: '#ffffff',
+      color: '#202020',
       fillOpacity: 1,
-      weight:      2,
-      opacity:     0.7,
-      setCursor:   true
+      weight: 2,
+      opacity: 0.7,
+      setCursor: true,
     },
 
     // rectangle
     boundsOptions: {
-      weight:    1,
-      opacity:   1,
+      weight: 1,
+      opacity: 1,
       dashArray: [3, 3],
-      fill:      false,
-      noClip:    true
+      fill: false,
+      noClip: true,
     },
 
     // rotation handler
     rotateHandleOptions: {
-      weight:    1,
-      opacity:   1,
-      setCursor: true
+      weight: 1,
+      opacity: 1,
+      setCursor: true,
     },
     // rotation handle length
     handleLength: 20,
 
     // maybe I'll add skewing in the future
-    edgesCount:   4,
+    edgesCount: 4,
 
-    handleClass:       L.PathTransform.Handle,
-    rotateHandleClass: L.PathTransform.RotateHandle
+    handleClass: L.PathTransform.Handle,
+    rotateHandleClass: L.PathTransform.RotateHandle,
   },
-
 
   /**
    * @class L.Handler.PathTransform
    * @constructor
    * @param  {L.Path} path
    */
-  initialize: function(path) {
+  initialize: function (path) {
     // references
     this._path = path;
-    this._map  = null;
+    this._map = null;
 
     // handlers
-    this._activeMarker   = null;
-    this._originMarker   = null;
+    this._activeMarker = null;
+    this._originMarker = null;
     this._rotationMarker = null;
 
     // origins & temporary state
-    this._rotationOrigin   = null;
-    this._scaleOrigin      = null;
-    this._angle            = 0;
-    this._scale            = L.point(1, 1);
-    this._initialDist      = 0;
-    this._initialDistX     = 0;
-    this._initialDistY     = 0;
-    this._rotationStart    = null;
+    this._rotationOrigin = null;
+    this._scaleOrigin = null;
+    this._angle = 0;
+    this._scale = L.point(1, 1);
+    this._initialDist = 0;
+    this._initialDistX = 0;
+    this._initialDistY = 0;
+    this._rotationStart = null;
     this._rotationOriginPt = null;
 
     // preview and transform matrix
-    this._matrix          = new L.Matrix(1, 0, 0, 1, 0, 0);
+    this._matrix = new L.Matrix(1, 0, 0, 1, 0, 0);
     this._projectedMatrix = new L.Matrix(1, 0, 0, 1, 0, 0);
 
     // ui elements
-    this._handlersGroup  = null;
-    this._rect           = null;
-    this._handlers       = [];
-    this._handleLine     = null;
+    this._handlersGroup = null;
+    this._rect = null;
+    this._handlers = [];
+    this._handleLine = null;
   },
-
 
   /**
    * If the polygon is not rendered, you can transform it yourself
    * in the coordinates, and do it properly.
    * @param {Object=} options
    */
-  enable: function(options) {
+  enable: function (options) {
     if (this._path._map) {
       this._map = this._path._map;
       if (options) {
@@ -1009,45 +1010,44 @@ L.Handler.PathTransform = L.Handler.extend({
     }
   },
 
-
   /**
    * Init interactions and handlers
    */
-  addHooks: function() {
+  addHooks: function () {
     this._createHandlers();
     this._path
       .on('dragstart', this._onDragStart, this)
-      .on('dragend',   this._onDragEnd,   this);
+      .on('dragend', this._onDragEnd, this);
   },
-
 
   /**
    * Remove handlers
    */
-  removeHooks: function() {
+  removeHooks: function () {
     this._hideHandlers();
     this._path
       .off('dragstart', this._onDragStart, this)
-      .off('dragend',   this._onDragEnd,   this);
+      .off('dragend', this._onDragEnd, this);
     this._handlersGroup = null;
     this._rect = null;
     this._handlers = [];
   },
 
-
   /**
    * Change editing options
    * @param {Object} options
    */
-  setOptions: function(options) {
+  setOptions: function (options) {
     var enabled = this._enabled;
     if (enabled) {
       this.disable();
     }
 
-    this.options = L.PathTransform.merge({},
+    this.options = L.PathTransform.merge(
+      {},
       L.Handler.PathTransform.prototype.options,
-      options);
+      options
+    );
 
     if (enabled) {
       this.enable();
@@ -1056,29 +1056,26 @@ L.Handler.PathTransform = L.Handler.extend({
     return this;
   },
 
-
   /**
    * @param  {Number}   angle
    * @param  {L.LatLng} origin
    * @return {L.Handler.PathTransform}
    */
-  rotate: function(angle, origin) {
+  rotate: function (angle, origin) {
     return this.transform(angle, null, origin);
   },
-
 
   /**
    * @param  {L.Point|Number} scale
    * @param  {L.LatLng}       origin
    * @return {L.Handler.PathTransform}
    */
-  scale: function(scale, origin) {
+  scale: function (scale, origin) {
     if (typeof scale === 'number') {
       scale = L.point(scale, scale);
     }
     return this.transform(0, scale, null, origin);
   },
-
 
   /**
    * @param  {Number}    angle
@@ -1087,23 +1084,40 @@ L.Handler.PathTransform = L.Handler.extend({
    * @param  {L.LatLng=} scaleOrigin
    * @return {L.Handler.PathTransform}
    */
-  transform: function(angle, scale, rotationOrigin, scaleOrigin) {
-    var center     = this._path.getCenter();
+  transform: function (angle, scale, rotationOrigin, scaleOrigin) {
+    var center = this._path.getCenter();
     rotationOrigin = rotationOrigin || center;
-    scaleOrigin    = scaleOrigin    || center;
+    scaleOrigin = scaleOrigin || center;
     this._map = this._path._map;
-    this._transformPoints(this._path, angle, scale, rotationOrigin, scaleOrigin);
-    this._transformPoints(this._rect, angle, scale, rotationOrigin, scaleOrigin);
-    this._transformPoints(this._handleLine, angle, scale, rotationOrigin, scaleOrigin);
+    this._transformPoints(
+      this._path,
+      angle,
+      scale,
+      rotationOrigin,
+      scaleOrigin
+    );
+    this._transformPoints(
+      this._rect,
+      angle,
+      scale,
+      rotationOrigin,
+      scaleOrigin
+    );
+    this._transformPoints(
+      this._handleLine,
+      angle,
+      scale,
+      rotationOrigin,
+      scaleOrigin
+    );
     this._updateHandlers();
     return this;
   },
 
-
   /**
    * Update the polygon and handlers preview, no reprojection
    */
-  _update: function() {
+  _update: function () {
     var matrix = this._matrix;
 
     // update handlers
@@ -1121,11 +1135,10 @@ L.Handler.PathTransform = L.Handler.extend({
     this._path.fire('transform', { layer: this._path });
   },
 
-
   /**
    * @param  {L.Matrix} matrix
    */
-  _applyTransform: function(matrix) {
+  _applyTransform: function (matrix) {
     this._path._transform(matrix._matrix);
     this._rect._transform(matrix._matrix);
 
@@ -1134,11 +1147,10 @@ L.Handler.PathTransform = L.Handler.extend({
     }
   },
 
-
   /**
    * Apply final transformation
    */
-  _apply: function() {
+  _apply: function () {
     //console.group('apply transform');
     var map = this._map;
     var matrix = this._matrix.clone();
@@ -1156,8 +1168,8 @@ L.Handler.PathTransform = L.Handler.extend({
     }
 
     this._matrix = L.matrix(1, 0, 0, 1, 0, 0);
-    this._scale  = L.point(1, 1);
-    this._angle  = 0;
+    this._scale = L.point(1, 1);
+    this._angle = 0;
 
     this._updateHandlers();
 
@@ -1167,17 +1179,16 @@ L.Handler.PathTransform = L.Handler.extend({
       scale: scale,
       rotation: angle,
       // angle: angle * (180 / Math.PI),
-      layer: this._path
+      layer: this._path,
     });
     // console.groupEnd('apply transform');
   },
-
 
   /**
    * Use this method to completely reset handlers, if you have changed the
    * geometry of transformed layer
    */
-  reset: function() {
+  reset: function () {
     if (this._enabled) {
       if (this._rect) {
         this._handlersGroup.removeLayer(this._rect);
@@ -1187,11 +1198,10 @@ L.Handler.PathTransform = L.Handler.extend({
     }
   },
 
-
   /**
    * Recalculate rotation handlers position
    */
-  _updateHandlers: function() {
+  _updateHandlers: function () {
     var handlersGroup = this._handlersGroup;
 
     this._rectShape = this._rect.toGeoJSON();
@@ -1213,25 +1223,38 @@ L.Handler.PathTransform = L.Handler.extend({
     this._createHandlers();
   },
 
-
   /**
    * Transform geometries separately
    */
-  _transformGeometries: function() {
+  _transformGeometries: function () {
     this._path._transform(null);
     this._rect._transform(null);
 
     if (this.options.rotation) {
       this._handleLine._transform(null);
-      this._transformPoints(this._path, this._angle, null, this.options.rotationAnchor);
-      this._transformPoints(this._rect, this._angle, null, this.options.rotationAnchor);
-      this._transformPoints(this._handleLine, this._angle, null, this.options.rotationAnchor);
+      this._transformPoints(
+        this._path,
+        this._angle,
+        null,
+        this.options.rotationAnchor
+      );
+      this._transformPoints(
+        this._rect,
+        this._angle,
+        null,
+        this.options.rotationAnchor
+      );
+      this._transformPoints(
+        this._handleLine,
+        this._angle,
+        null,
+        this.options.rotationAnchor
+      );
     } else {
       this._transformPoints(this._path);
       this._transformPoints(this._rect);
     }
   },
-
 
   /**
    * @param {Number} angle
@@ -1239,9 +1262,9 @@ L.Handler.PathTransform = L.Handler.extend({
    * @param {L.LatLng=} rotationOrigin
    * @param {L.LatLng=} scaleOrigin
    */
-  _getProjectedMatrix: function(angle, scale, rotationOrigin, scaleOrigin) {
-    var map    = this._map;
-    var zoom   = map.getMaxZoom() || this.options.maxZoom;
+  _getProjectedMatrix: function (angle, scale, rotationOrigin, scaleOrigin) {
+    var map = this._map;
+    var zoom = map.getMaxZoom() || this.options.maxZoom;
     var matrix = L.matrix(1, 0, 0, 1, 0, 0);
     var origin;
 
@@ -1266,7 +1289,6 @@ L.Handler.PathTransform = L.Handler.extend({
     return matrix;
   },
 
-
   /**
    * @param  {L.LatLng} latlng
    * @param  {L.Matrix} matrix
@@ -1274,11 +1296,9 @@ L.Handler.PathTransform = L.Handler.extend({
    * @param  {Number}   zoom
    * @return {L.LatLng}
    */
-  _transformPoint: function(latlng, matrix, map, zoom) {
-    return map.unproject(matrix.transform(
-      map.project(latlng, zoom)), zoom);
+  _transformPoint: function (latlng, matrix, map, zoom) {
+    return map.unproject(matrix.transform(map.project(latlng, zoom)), zoom);
   },
-
 
   /**
    * Applies transformation, does it in one sweep for performance,
@@ -1290,34 +1310,51 @@ L.Handler.PathTransform = L.Handler.extend({
    * @param {L.LatLng=} rotationOrigin
    * @param {L.LatLng=} scaleOrigin
    */
-  _transformPoints: function(path, angle, scale, rotationOrigin, scaleOrigin) {
+  _transformPoints: function (path, angle, scale, rotationOrigin, scaleOrigin) {
     var map = path._map;
     var zoom = map.getMaxZoom() || this.options.maxZoom;
     var i, len;
 
-    var projectedMatrix = this._projectedMatrix =
-      this._getProjectedMatrix(angle, scale, rotationOrigin, scaleOrigin);
+    var projectedMatrix = (this._projectedMatrix = this._getProjectedMatrix(
+      angle,
+      scale,
+      rotationOrigin,
+      scaleOrigin
+    ));
     // console.time('transform');
 
     // all shifts are in-place
-    if (path._point) { // L.Circle
+    if (path._point) {
+      // L.Circle
       path._latlng = this._transformPoint(
-        path._latlng, projectedMatrix, map, zoom);
+        path._latlng,
+        projectedMatrix,
+        map,
+        zoom
+      );
       var box = this._getBoundingPolygon();
-      var radius = Math.floor(Math.abs(box._bounds._southWest.lat - box._bounds._northEast.lat) / 2);
+      var radius = Math.floor(
+        Math.abs(box._bounds._southWest.lat - box._bounds._northEast.lat) / 2
+      );
       path.setRadius(radius);
-    } else if (path._rings || path._parts) { // everything else
+    } else if (path._rings || path._parts) {
+      // everything else
       var rings = path._rings;
       var latlngs = path._latlngs;
       path._bounds = new L.LatLngBounds();
 
-      if (!L.Util.isArray(latlngs[0])) { // polyline
+      if (!L.Util.isArray(latlngs[0])) {
+        // polyline
         latlngs = [latlngs];
       }
       for (i = 0, len = rings.length; i < len; i++) {
         for (var j = 0, jj = rings[i].length; j < jj; j++) {
           latlngs[i][j] = this._transformPoint(
-            latlngs[i][j], projectedMatrix, map, zoom);
+            latlngs[i][j],
+            projectedMatrix,
+            map,
+            zoom
+          );
           path._bounds.extend(latlngs[i][j]);
         }
       }
@@ -1327,24 +1364,24 @@ L.Handler.PathTransform = L.Handler.extend({
     //console.timeEnd('transform');
   },
 
-
   /**
    * Creates markers and handles
    */
-  _createHandlers: function() {
+  _createHandlers: function () {
     var map = this._map;
-    this._handlersGroup = this._handlersGroup ||
-                          new L.LayerGroup().addTo(map);
-    this._rect = this._rect ||
-                 this._getBoundingPolygon().addTo(this._handlersGroup);
+    this._handlersGroup = this._handlersGroup || new L.LayerGroup().addTo(map);
+    this._rect =
+      this._rect || this._getBoundingPolygon().addTo(this._handlersGroup);
 
     if (this.options.scaling) {
       this._handlers = [];
       for (var i = 0; i < this.options.edgesCount; i++) {
         // TODO: add stretching
         this._handlers.push(
-          this._createHandler(this._rect._latlngs[0][i], i * 2, i)
-          .addTo(this._handlersGroup));
+          this._createHandler(this._rect._latlngs[0][i], i * 2, i).addTo(
+            this._handlersGroup
+          )
+        );
       }
     }
 
@@ -1355,34 +1392,40 @@ L.Handler.PathTransform = L.Handler.extend({
     }
   },
 
-
   /**
    * Rotation marker and small connectin handle
    */
-  _createRotationHandlers: function() {
-    var map     = this._map;
+  _createRotationHandlers: function () {
+    var map = this._map;
     var latlngs = this._rect._latlngs[0];
 
-    var bottom   = new L.LatLng(
+    var bottom = new L.LatLng(
       (latlngs[0].lat + latlngs[3].lat) / 2,
-      (latlngs[0].lng + latlngs[3].lng) / 2);
+      (latlngs[0].lng + latlngs[3].lng) / 2
+    );
     // hehe, top is a reserved word
     var topPoint = new L.LatLng(
       (latlngs[1].lat + latlngs[2].lat) / 2,
-      (latlngs[1].lng + latlngs[2].lng) / 2);
+      (latlngs[1].lng + latlngs[2].lng) / 2
+    );
 
     var handlerPosition = map.layerPointToLatLng(
       L.PathTransform.pointOnLine(
         map.latLngToLayerPoint(bottom),
         map.latLngToLayerPoint(topPoint),
-        this.options.handleLength)
+        this.options.handleLength
+      )
     );
 
-    this._handleLine = new L.Polyline([topPoint, handlerPosition],
-      this.options.rotateHandleOptions).addTo(this._handlersGroup);
+    this._handleLine = new L.Polyline(
+      [topPoint, handlerPosition],
+      this.options.rotateHandleOptions
+    ).addTo(this._handlersGroup);
     var RotateHandleClass = this.options.rotateHandleClass;
-    this._rotationMarker = new RotateHandleClass(handlerPosition,
-      this.options.handlerOptions)
+    this._rotationMarker = new RotateHandleClass(
+      handlerPosition,
+      this.options.handlerOptions
+    )
       .addTo(this._handlersGroup)
       .on('mousedown', this._onRotateStart, this);
 
@@ -1394,14 +1437,13 @@ L.Handler.PathTransform = L.Handler.extend({
     this._handlers.push(this._rotationMarker);
   },
 
-
   /**
    * @return {L.LatLng}
    */
-  _getRotationOrigin: function() {
+  _getRotationOrigin: function () {
     if (this.options.rotationAnchor) {
       var anchor = this.options.rotationAnchor;
-      if (anchor.constructor === Array && anchor.length >= 2) {
+      if (Array.isArray(anchor) && anchor.length >= 2) {
         return new L.LatLng(anchor[0], anchor[1]);
       } else if (anchor instanceof L.LatLng) {
         return anchor;
@@ -1411,50 +1453,46 @@ L.Handler.PathTransform = L.Handler.extend({
     var lb = latlngs[0];
     var rt = latlngs[2];
 
-    return new L.LatLng(
-      (lb.lat + rt.lat) / 2,
-      (lb.lng + rt.lng) / 2
-    );
+    return new L.LatLng((lb.lat + rt.lat) / 2, (lb.lng + rt.lng) / 2);
   },
-
 
   /**
    * Secure the rotation origin
    * @param  {Event} evt
    */
-  _onRotateStart: function(evt) {
+  _onRotateStart: function (evt) {
     var map = this._map;
 
     map.dragging.disable();
 
-    this._originMarker     = null;
+    this._originMarker = null;
     this._rotationOriginPt = map.latLngToLayerPoint(this._getRotationOrigin());
-    this._rotationStart    = evt.layerPoint;
-    this._initialMatrix    = this._matrix.clone();
+    this._rotationStart = evt.layerPoint;
+    this._initialMatrix = this._matrix.clone();
 
     this._angle = 0;
     this._path._map
-      .on('mousemove', this._onRotate,     this)
-      .on('mouseup',   this._onRotateEnd, this);
+      .on('mousemove', this._onRotate, this)
+      .on('mouseup', this._onRotateEnd, this);
 
     this._cachePoints();
     this._path
-      .fire('transformstart',   { layer: this._path })
+      .fire('transformstart', { layer: this._path })
       .fire('rotatestart', { layer: this._path, rotation: 0 });
   },
-
 
   /**
    * @param  {Event} evt
    */
-  _onRotate: function(evt) {
+  _onRotate: function (evt) {
     var pos = evt.layerPoint;
     var previous = this._rotationStart;
-    var origin   = this._rotationOriginPt;
+    var origin = this._rotationOriginPt;
 
     // rotation step angle
-    this._angle = Math.atan2(pos.y - origin.y, pos.x - origin.x) -
-                  Math.atan2(previous.y - origin.y, previous.x - origin.x);
+    this._angle =
+      Math.atan2(pos.y - origin.y, pos.x - origin.x) -
+      Math.atan2(previous.y - origin.y, previous.x - origin.x);
 
     this._matrix = this._initialMatrix
       .clone()
@@ -1465,25 +1503,23 @@ L.Handler.PathTransform = L.Handler.extend({
     this._path.fire('rotate', { layer: this._path, rotation: this._angle });
   },
 
-
   /**
    * @param  {Event} evt
    */
-  _onRotateEnd: function(evt) {
+  _onRotateEnd: function (evt) {
     this._path._map
       .off('mousemove', this._onRotate, this)
-      .off('mouseup',   this._onRotateEnd, this);
+      .off('mouseup', this._onRotateEnd, this);
 
     var angle = this._angle;
     this._apply();
     this._path.fire('rotateend', { layer: this._path, rotation: angle });
   },
 
-
   /**
    * @param  {Event} evt
    */
-  _onScaleStart: function(evt) {
+  _onScaleStart: function (evt) {
     var marker = evt.target;
     var map = this._map;
 
@@ -1492,17 +1528,21 @@ L.Handler.PathTransform = L.Handler.extend({
     this._activeMarker = marker;
 
     this._originMarker = this._handlers[(marker.options.index + 2) % 4];
-    this._scaleOrigin  = this._originMarker.getLatLng();
+    this._scaleOrigin = this._originMarker.getLatLng();
 
     this._initialMatrix = this._matrix.clone();
     this._cachePoints();
 
     this._map
-      .on('mousemove', this._onScale,    this)
-      .on('mouseup',   this._onScaleEnd, this);
-    this._initialDist  = this._originMarker._point.distanceTo(this._activeMarker._point);
-    this._initialDistX = this._originMarker._point.x - this._activeMarker._point.x;
-    this._initialDistY = this._originMarker._point.y - this._activeMarker._point.y;
+      .on('mousemove', this._onScale, this)
+      .on('mouseup', this._onScaleEnd, this);
+    this._initialDist = this._originMarker._point.distanceTo(
+      this._activeMarker._point
+    );
+    this._initialDistX =
+      this._originMarker._point.x - this._activeMarker._point.x;
+    this._initialDistY =
+      this._originMarker._point.y - this._activeMarker._point.y;
 
     this._path
       .fire('transformstart', { layer: this._path })
@@ -1518,11 +1558,10 @@ L.Handler.PathTransform = L.Handler.extend({
     //this._handleLine = this._rotationMarker = null;
   },
 
-
   /**
    * @param  {Event} evt
    */
-  _onScale: function(evt) {
+  _onScale: function (evt) {
     var originPoint = this._originMarker._point;
     var ratioX, ratioY;
     if (this.options.uniformScaling) {
@@ -1536,24 +1575,23 @@ L.Handler.PathTransform = L.Handler.extend({
     this._scale = new L.Point(ratioX, ratioY);
 
     // update matrix
-    this._matrix = this._initialMatrix
-      .clone()
-      .scale(this._scale, originPoint);
+    this._matrix = this._initialMatrix.clone().scale(this._scale, originPoint);
 
     this._update();
     this._path.fire('scale', {
-      layer: this._path, scale: this._scale.clone() });
+      layer: this._path,
+      scale: this._scale.clone(),
+    });
   },
-
 
   /**
    * Scaling complete
    * @param  {Event} evt
    */
-  _onScaleEnd: function(evt) {
+  _onScaleEnd: function (evt) {
     this._map
-      .off('mousemove', this._onScale,    this)
-      .off('mouseup',   this._onScaleEnd, this);
+      .off('mousemove', this._onScale, this)
+      .off('mouseup', this._onScaleEnd, this);
 
     if (this._handleLine) {
       this._map.addLayer(this._handleLine);
@@ -1564,15 +1602,16 @@ L.Handler.PathTransform = L.Handler.extend({
 
     this._apply();
     this._path.fire('scaleend', {
-      layer: this._path, scale: this._scale.clone() });
+      layer: this._path,
+      scale: this._scale.clone(),
+    });
   },
-
 
   /**
    * Cache current handlers positions
    */
-  _cachePoints: function() {
-    this._handlersGroup.eachLayer(function(layer) {
+  _cachePoints: function () {
+    this._handlersGroup.eachLayer(function (layer) {
       layer.bringToFront();
     });
     for (var i = 0, len = this._handlers.length; i < len; i++) {
@@ -1581,21 +1620,23 @@ L.Handler.PathTransform = L.Handler.extend({
     }
   },
 
-
   /**
    * Bounding polygon
    * @return {L.Polygon}
    */
-  _getBoundingPolygon: function() {
+  _getBoundingPolygon: function () {
     if (this._rectShape) {
       return L.GeoJSON.geometryToLayer(
-        this._rectShape, this.options.boundsOptions);
+        this._rectShape,
+        this.options.boundsOptions
+      );
     } else {
       return new L.Rectangle(
-        this._path.getBounds(), this.options.boundsOptions);
+        this._path.getBounds(),
+        this.options.boundsOptions
+      );
     }
   },
-
 
   /**
    * Create corner marker
@@ -1604,14 +1645,18 @@ L.Handler.PathTransform = L.Handler.extend({
    * @param  {Number}   index
    * @return {L.Handler.PathTransform.Handle}
    */
-  _createHandler: function(latlng, type, index) {
+  _createHandler: function (latlng, type, index) {
     var HandleClass = this.options.handleClass;
-    var marker = new HandleClass(latlng,
+    var marker = new HandleClass(
+      latlng,
       L.Util.extend({}, this.options.handlerOptions, {
-        className: 'leaflet-drag-transform-marker drag-marker--' +
-                   index + ' drag-marker--' + type,
-        index:     index,
-        type:      type
+        className:
+          'leaflet-drag-transform-marker drag-marker--' +
+          index +
+          ' drag-marker--' +
+          type,
+        index: index,
+        type: type,
       })
     );
 
@@ -1619,27 +1664,24 @@ L.Handler.PathTransform = L.Handler.extend({
     return marker;
   },
 
-
   /**
    * Hide(not remove) the handlers layer
    */
-  _hideHandlers: function() {
+  _hideHandlers: function () {
     this._map.removeLayer(this._handlersGroup);
   },
-
 
   /**
    * Hide handlers and rectangle
    */
-  _onDragStart: function() {
+  _onDragStart: function () {
     this._hideHandlers();
   },
-
 
   /**
    * Drag rectangle, re-create handlers
    */
-  _onDragEnd: function(evt) {
+  _onDragEnd: function (evt) {
     var rect = this._rect;
     var matrix = (evt.layer ? evt.layer : this._path).dragging._matrix.slice();
 
@@ -1661,13 +1703,12 @@ L.Handler.PathTransform = L.Handler.extend({
       rotation: 0,
       matrix: L.matrix.apply(undefined, matrix),
       translate: L.point(matrix[4], matrix[5]),
-      layer: this._path
+      layer: this._path,
     });
-  }
+  },
 });
 
-
-L.Path.addInitHook(function() {
+L.Path.addInitHook(function () {
   if (this.options.transform) {
     this.transform = new L.Handler.PathTransform(this, this.options.transform);
   }
