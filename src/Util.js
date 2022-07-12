@@ -12,7 +12,7 @@ L.PathTransform = {};
  * @param  {Number}  distPx
  * @return {L.Point}
  */
-L.PathTransform.pointOnLine = function(start, final, distPx) {
+L.PathTransform.pointOnLine = function (start, final, distPx) {
   var ratio = 1 + distPx / start.distanceTo(final);
   return new L.Point(
     start.x + (final.x - start.x) * ratio,
@@ -20,11 +20,10 @@ L.PathTransform.pointOnLine = function(start, final, distPx) {
   );
 };
 
-
 /**
  * Deep merge objects.
  */
-L.PathTransform.merge = function() {
+L.PathTransform.merge = function () {
   var i = 1;
   var key, val;
   var obj = arguments[i];
@@ -46,7 +45,7 @@ L.PathTransform.merge = function() {
 
       val = obj[key];
 
-      if (isObject(val) && isObject(target[key])){
+      if (isObject(val) && isObject(target[key])) {
         target[key] = L.PathTransform.merge(target[key], val);
       } else {
         target[key] = val;

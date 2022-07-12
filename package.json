@@ -1,6 +1,6 @@
 {
   "name": "leaflet-path-transform",
-  "version": "1.1.3",
+  "version": "1.8.0-beta.1",
   "description": "Scale/rotate/move plugin for leaflet vector layers ",
   "main": "index.js",
   "scripts": {
@@ -28,12 +28,14 @@
   "author": "Alexander Milevski <info@w8r.name>",
   "license": "MIT",
   "dependencies": {
-    "leaflet-path-drag": "^1.1.0"
+    "leaflet-path-drag": "^1.8.0-beta.3"
+  },
+  "peerDependencies": {
+    "leaflet": "^1.8.0"
   },
   "devDependencies": {
     "eslint": "^5.9.0",
     "http-server": "^0.11.1",
-    "leaflet": "^1.3.4",
     "tape": "^4.9.1",
     "uglify-js": "^3.4.9",
     "watchify": "^3.11.1"

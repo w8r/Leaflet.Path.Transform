@@ -8,26 +8,21 @@
  * @param {Number} e
  * @param {Number} f
  */
-L.Matrix = function(a, b, c, d, e, f) {
-
+L.Matrix = function (a, b, c, d, e, f) {
   /**
    * @type {Array.<Number>}
    */
   this._matrix = [a, b, c, d, e, f];
 };
 
-
 L.Matrix.prototype = {
-
-
   /**
    * @param  {L.Point} point
    * @return {L.Point}
    */
-  transform: function(point) {
+  transform: function (point) {
     return this._transform(point.clone());
   },
-
 
   /**
    * Destructive
@@ -38,14 +33,14 @@ L.Matrix.prototype = {
    * @param  {L.Point} point
    * @return {L.Point}
    */
-  _transform: function(point) {
+  _transform: function (point) {
     var matrix = this._matrix;
-    var x = point.x, y = point.y;
+    var x = point.x,
+      y = point.y;
     point.x = matrix[0] * x + matrix[1] * y + matrix[4];
     point.y = matrix[2] * x + matrix[3] * y + matrix[5];
     return point;
   },
-
 
   /**
    * @param  {L.Point} point
@@ -59,24 +54,26 @@ L.Matrix.prototype = {
     );
   },
 
-
   /**
    * @return {L.Matrix}
    */
-  clone: function() {
+  clone: function () {
     var matrix = this._matrix;
     return new L.Matrix(
-      matrix[0], matrix[1], matrix[2],
-      matrix[3], matrix[4], matrix[5]
+      matrix[0],
+      matrix[1],
+      matrix[2],
+      matrix[3],
+      matrix[4],
+      matrix[5]
     );
   },
-
 
   /**
    * @param {L.Point=|Number=} translate
    * @return {L.Matrix|L.Point}
    */
-  translate: function(translate) {
+  translate: function (translate) {
     if (translate === undefined) {
       return new L.Point(this._matrix[4], this._matrix[5]);
     }
@@ -92,12 +89,11 @@ L.Matrix.prototype = {
     return this._add(1, 0, 0, 1, translateX, translateY);
   },
 
-
   /**
    * @param {L.Point=|Number=} scale
    * @return {L.Matrix|L.Point}
    */
-  scale: function(scale, origin) {
+  scale: function (scale, origin) {
     if (scale === undefined) {
       return new L.Point(this._matrix[0], this._matrix[3]);
     }
@@ -111,11 +107,15 @@ L.Matrix.prototype = {
       scaleY = scale.y;
     }
 
-    return this
-      ._add(scaleX, 0, 0, scaleY, origin.x, origin.y)
-      ._add(1, 0, 0, 1, -origin.x, -origin.y);
+    return this._add(scaleX, 0, 0, scaleY, origin.x, origin.y)._add(
+      1,
+      0,
+      0,
+      1,
+      -origin.x,
+      -origin.y
+    );
   },
-
 
   /**
    * m00  m01  x - m00 * x - m01 * y
@@ -124,28 +124,31 @@ L.Matrix.prototype = {
    * @param {L.Point=} origin
    * @return {L.Matrix}
    */
-  rotate: function(angle, origin) {
+  rotate: function (angle, origin) {
     var cos = Math.cos(angle);
     var sin = Math.sin(angle);
 
     origin = origin || new L.Point(0, 0);
 
-    return this
-      ._add(cos, sin, -sin, cos, origin.x, origin.y)
-      ._add(1, 0, 0, 1, -origin.x, -origin.y);
+    return this._add(cos, sin, -sin, cos, origin.x, origin.y)._add(
+      1,
+      0,
+      0,
+      1,
+      -origin.x,
+      -origin.y
+    );
   },
-
 
   /**
    * Invert rotation
    * @return {L.Matrix}
    */
-  flip: function() {
+  flip: function () {
     this._matrix[1] *= -1;
     this._matrix[2] *= -1;
     return this;
   },
-
 
   /**
    * @param {Number|L.Matrix} a
@@ -155,27 +158,28 @@ L.Matrix.prototype = {
    * @param {Number} e
    * @param {Number} f
    */
-  _add: function(a, b, c, d, e, f) {
+  _add: function (a, b, c, d, e, f) {
     var result = [[], [], []];
     var src = this._matrix;
     var m = [
       [src[0], src[2], src[4]],
       [src[1], src[3], src[5]],
-      [     0,      0,     1]
+      [0, 0, 1],
     ];
     var other = [
-      [a, c, e],
-      [b, d, f],
-      [0, 0, 1]
-    ], val;
-
+        [a, c, e],
+        [b, d, f],
+        [0, 0, 1],
+      ],
+      val;
 
     if (a && a instanceof L.Matrix) {
       src = a._matrix;
       other = [
         [src[0], src[2], src[4]],
         [src[1], src[3], src[5]],
-        [     0,      0,     1]];
+        [0, 0, 1],
+      ];
     }
 
     for (var i = 0; i < 3; i++) {
@@ -189,16 +193,17 @@ L.Matrix.prototype = {
     }
 
     this._matrix = [
-      result[0][0], result[1][0], result[0][1],
-      result[1][1], result[0][2], result[1][2]
+      result[0][0],
+      result[1][0],
+      result[0][1],
+      result[1][1],
+      result[0][2],
+      result[1][2],
     ];
     return this;
-  }
-
-
+  },
 };
 
-
-L.matrix = function(a, b, c, d, e, f) {
+L.matrix = function (a, b, c, d, e, f) {
   return new L.Matrix(a, b, c, d, e, f);
 };
