@@ -225,22 +225,11 @@ var layers = [polygon, polyline, rectangle, multiPolyline, multiPolygon, polygon
 
 function update() {
   L.Util.requestAnimFrame(function() {
-    var dragging = document.querySelector('#dragging').checked;
     var scaling = document.querySelector('#scaling').checked;
     var rotation = document.querySelector('#rotation').checked;
     var uniform  = document.querySelector('#uniform').checked;
 
     layers.forEach(function(layer) {
-
-      if (layer.dragging) {
-        layer.dragging[dragging ? 'enable': 'disable']();
-      } else {
-        layer.eachLayer(function(sublayer) {
-          sublayer.dragging[dragging ? 'enable': 'disable']();
-        });
-      }
-
-
       layer.transform.setOptions({
         scaling: scaling,
         rotation: rotation,

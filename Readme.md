@@ -1,13 +1,12 @@
 # [Karelics] Leaflet.Path.Transform
 
-Drag/rotate/resize handler for [leaflet](http://leafletjs.com) vector features.
+Rotate/resize handler for [leaflet](http://leafletjs.com) vector features.
 
 ![screenshot 2016-03-21 15 31 48](https://cloud.githubusercontent.com/assets/26884/13921863/4470b97c-ef7a-11e5-8ea2-46161fffaedd.png)
 
 Based on [L.Path.Transform](https://github.com/w8r/Leaflet.Path.Transform) with improved behavior on touch devices.
 
-Includes [L.Path.Drag](https://github.com/w8r/Leaflet.Path.Drag), so you don't
-need to include it once again.
+[L.Path.Drag](https://github.com/w8r/Leaflet.Path.Drag) excluded from the package. Include it manually in case it is needed.
 
 ### Requirements
 
