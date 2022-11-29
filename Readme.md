@@ -1,8 +1,10 @@
-# Leaflet.Path.Transform [![npm version](https://badge.fury.io/js/leaflet-path-transform.svg)](https://badge.fury.io/js/leaflet-path-transform)
+# [Karelics] Leaflet.Path.Transform
 
 Drag/rotate/resize handler for [leaflet](http://leafletjs.com) vector features.
 
 ![screenshot 2016-03-21 15 31 48](https://cloud.githubusercontent.com/assets/26884/13921863/4470b97c-ef7a-11e5-8ea2-46161fffaedd.png)
+
+Based on [L.Path.Transform](https://github.com/w8r/Leaflet.Path.Transform) with improved behavior on touch devices.
 
 Includes [L.Path.Drag](https://github.com/w8r/Leaflet.Path.Drag), so you don't
 need to include it once again.
@@ -77,17 +79,6 @@ To control features dragging, see
 polygon.dragging.disable();
 polygon.dragging.enable();
 ```
-
-
-
-### TODO
-
- - [ ] Tests
- - [ ] Precision fix for rotation
- - [x] Leaflet 1.x support
- - [x] [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable) adapter
- - [ ] [Leaflet.draw](https://github.com/Leaflet/Leaflet.draw) adapter
- - [x] Canvas renderer support
 
 ### License
 
