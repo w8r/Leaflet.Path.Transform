@@ -82,6 +82,16 @@ L.PathTransform.RotateHandle = L.PathTransform.Handle.extend({
 L.Handler.PathTransform = L.Handler.extend({
   options: {
     rotation: true,
+    showRotationAngle: true,
+    /**
+     * @param {number} angle
+     * @returns {string}
+     */
+    rotationAngleTooltipFormatter: function(angle) {
+      return angle.toFixed(2);
+    },
+    rotationAngleTooltipOptions: {},
+
     scaling: true,
     uniformScaling: true,
     maxZoom: 22,
@@ -110,11 +120,17 @@ L.Handler.PathTransform = L.Handler.extend({
     rotateHandleOptions: {
       weight: 1,
       opacity: 1,
-      dashArray: [3, 3],
       setCursor: true,
     },
     // rotation handle length
     handleLength: 20,
+
+    rotationAngleMarkersOptions: {
+      radius: 3,
+      fill: true,
+      fillOpacity: 1,
+      stroke: false,
+    },
 
     // maybe I'll add skewing in the future
     edgesCount: 4,
@@ -159,6 +175,9 @@ L.Handler.PathTransform = L.Handler.extend({
     this._rect = null;
     this._handlers = [];
     this._handleLine = null;
+    this._rotationAngleLine = null;
+    this._rotationAngleMarkers = [];
+    this._rotationAngleTooltip = null;
 
     // touch overrides
     if (L.Browser.mobile && L.Browser.touch) {
@@ -382,6 +401,7 @@ L.Handler.PathTransform = L.Handler.extend({
    * Recalculate rotation handlers position
    */
   _updateHandlers: function () {
+    this._clearRotationAngleHandlers();
     var handlersGroup = this._handlersGroup;
 
     this._rectShape = this._rect.toGeoJSON();
@@ -600,6 +620,45 @@ L.Handler.PathTransform = L.Handler.extend({
     this._handlers.push(this._rotationMarker);
   },
 
+  _showRotationAngle: function() {
+    var markerLatLng = this._rotationMarker.getLatLng();
+
+    this._handleLine.setLatLngs([this._getRotationOrigin(), markerLatLng]);
+
+    this._rotationAngleLine = new L.Polyline(
+      [this._getRotationOrigin(), markerLatLng],
+      this.options.rotateHandleOptions
+    ).addTo(this._handlersGroup);
+
+    this._rotationAngleMarkers = [
+      L.circleMarker(this._getRotationOrigin(), this.options.rotationAngleMarkersOptions).addTo(this._handlersGroup),
+      L.circleMarker(markerLatLng, this.options.rotationAngleMarkersOptions).addTo(this._handlersGroup),
+    ];
+
+    this._rotationAngleTooltip = L.tooltip(this.options.rotationAngleTooltipOptions)
+      .setLatLng(markerLatLng)
+      .setContent(this.options.rotationAngleTooltipFormatter(0))
+      .addTo(this._handlersGroup);
+  },
+
+  _clearRotationAngleHandlers: function() {
+    if (this._rotationAngleLine) {
+      this._handlersGroup.removeLayer(this._rotationAngleLine);
+      this._rotationAngleLine = null;
+    }
+
+    if (this._rotationAngleTooltip) {
+      this._handlersGroup.removeLayer(this._rotationAngleTooltip);
+      this._rotationAngleTooltip = null;
+    }
+
+    for (var i = 0; i < this._rotationAngleMarkers.length; i++) {
+      this._handlersGroup.removeLayer(this._rotationAngleMarkers[i]);
+    }
+
+    this._rotationAngleMarkers = [];
+  },
+
   /**
    * @return {L.LatLng}
    */
@@ -624,6 +683,10 @@ L.Handler.PathTransform = L.Handler.extend({
     this._rotationOriginPt = map.latLngToLayerPoint(this._getRotationOrigin());
     this._rotationStart = evt.layerPoint;
     this._initialMatrix = this._matrix.clone();
+
+    if (this.options.showRotationAngle) {
+      this._showRotationAngle();
+    }
 
     this._angle = 0;
     this._path._map
@@ -653,6 +716,12 @@ L.Handler.PathTransform = L.Handler.extend({
       .clone()
       .rotate(this._angle, origin)
       .flip();
+
+    if (this._rotationAngleTooltip) {
+      this._rotationAngleTooltip
+      .setContent(this.options.rotationAngleTooltipFormatter(this._angle))
+      .setLatLng(evt.latlng);
+    }
 
     this._update();
     this._path.fire('rotate', { layer: this._path, rotation: this._angle });
