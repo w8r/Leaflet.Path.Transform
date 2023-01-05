@@ -521,6 +521,10 @@ L.Handler.PathTransform = L.Handler.extend({
       //add rotation handler
       this._createRotationHandlers();
     }
+
+    // move handlers to the top of all other layers; prevents handlers from
+    // being blocked by other layers
+    this._handlersGroup.getLayers().forEach(function(layer) { layer.bringToFront(); });
   },
 
   /**
