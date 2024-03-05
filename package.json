@@ -14,8 +14,9 @@
     }
   },
   "files": [
-    "dist",
-    "src/**/*.js"
+    "dist/index.js",
+    "dist/index.mjs",
+    "dist/index.cjs"
   ],
   "scripts": {
     "start": "vite dev",
