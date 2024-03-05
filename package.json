@@ -2,8 +2,21 @@
   "name": "leaflet-path-transform",
   "version": "1.9.0-alpha",
   "description": "Scale/rotate/move plugin for leaflet vector layers ",
-  "main": "index.js",
-  "browser": "dist/L.Path.Transform.js",
+  "main": "dist/index.mjs",
+  "module": "dist/index.mjs",
+  "browser": "dist/index.js",
+  "unpkg": "dist/index.js",
+  "jsdelivr": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src/**/*.js"
+  ],
   "scripts": {
     "start": "vite dev",
     "lint": "eslint ./src/*.mjs",
@@ -39,11 +52,6 @@
   "directories": {
     "example": "example"
   },
-  "files": [
-    "src/**/*.js",
-    "dist/*.js",
-    "index.js"
-  ],
   "prettier": {
     "printWidth": 80,
     "singleQuote": true
