@@ -7,6 +7,9 @@ Drag/rotate/resize handler for [leaflet](http://leafletjs.com) vector features.
 Includes [L.Path.Drag](https://github.com/w8r/Leaflet.Path.Drag), so you don't
 need to include it once again.
 
+[**Open on codesandbox.io**](https://codesandbox.io/p/sandbox/2vz49q)
+ 
+
 ### Requirements
 
 Leaflet 1.0+
