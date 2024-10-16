@@ -41,7 +41,7 @@
     "leaflet-path-drag": "1.9.5"
   },
   "peerDependencies": {
-    "leaflet": ">=1.8.0 <=1.9.x"
+    "leaflet": ">=1.8.0 <1.10.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.1.1",
