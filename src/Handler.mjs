@@ -9,7 +9,6 @@ import {
   Polyline,
   GeoJSON,
   DomEvent,
-  Browser,
 } from 'leaflet';
 import { Matrix, matrix } from './Matrix';
 import { Handle, RotateHandle } from './Handles';
