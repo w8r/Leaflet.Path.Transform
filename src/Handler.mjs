@@ -7,7 +7,6 @@ import {
   LayerGroup,
   Rectangle,
   Polyline,
-  GeoJSON,
   DomEvent,
 } from 'leaflet';
 import { Matrix, matrix } from './Matrix';
@@ -287,8 +286,6 @@ export const Transform = Handler.extend({
    */
   _updateHandlers() {
     const handlersGroup = this._handlersGroup;
-
-    this._rectShape = this._rect.toGeoJSON();
 
     if (this._handleLine) {
       this._handlersGroup.removeLayer(this._handleLine);
@@ -684,14 +681,7 @@ export const Transform = Handler.extend({
    * @return {L.Polygon}
    */
   _getBoundingPolygon() {
-    if (this._rectShape) {
-      return GeoJSON.geometryToLayer(
-        this._rectShape,
-        this.options.boundsOptions,
-      );
-    } else {
       return new Rectangle(this._path.getBounds(), this.options.boundsOptions);
-    }
   },
 
   /**
