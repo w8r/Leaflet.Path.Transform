@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import pkg from './package.json';
 
 const extensions = {
   es: 'mjs',
@@ -20,7 +21,7 @@ export default defineConfig({
     lib: {
       formats: ['es', 'umd', 'cjs'],
       entry: 'src/index.mjs',
-      name: require('./package.json').name,
+      name: pkg.name,
       fileName: (format) => `index.${extensions[format]}`,
     },
     rollupOptions: {
